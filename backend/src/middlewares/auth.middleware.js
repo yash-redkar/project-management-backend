@@ -7,9 +7,10 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
 export const verifyJWT = asyncHandler(async (req, res, next) => {
-    const token =
-        req.cookies?.accessToken ||
-        req.header("Authorization")?.replace("Bearer ", "");
+    const authHeader = req.header("Authorization");
+    const token = authHeader?.startsWith("Bearer ")
+        ? authHeader.slice(7)
+        : null;
 
     if (!token) {
         throw new ApiError(401, "Unauthorized request: No token provided");
@@ -18,7 +19,7 @@ export const verifyJWT = asyncHandler(async (req, res, next) => {
         const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
 
         const user = await User.findById(decodedToken?._id).select(
-            "-password -refreshToken -emailVerificationToken -emailVerificationExpiry",
+            "-password -refreshTokenHash -refreshTokenExpiresAt -emailVerificationToken -emailVerificationExpiry",
         );
 
         if (!user) {

@@ -5,15 +5,15 @@ import crypto from "crypto"
 
 const userSchema = new Schema(
     {
-        avatar:{
-            type:{
-                url:String,
-                localPath:String
+        avatar: {
+            type: {
+                url: String,
+                localPath: String,
             },
-            default:{
-                url:`https://placehold.co/200x200`,
-                localPath: ""
-            }
+            default: {
+                url: `https://placehold.co/200x200`,
+                localPath: "",
+            },
         },
         username: {
             type: String,
@@ -21,52 +21,51 @@ const userSchema = new Schema(
             unique: true,
             lowercase: true,
             trim: true,
-            index:true,
+            index: true,
         },
         email: {
             type: String,
             required: true,
             unique: true,
             lowercase: true,
-            trim: true
+            trim: true,
         },
         fullName: {
             type: String,
-            trim:true
+            trim: true,
         },
         password: {
-            type:String,
-            required: [true,"Password is required"]
+            type: String,
+            required: [true, "Password is required"],
         },
         isEmailVerified: {
             type: Boolean,
-            default: false
+            default: false,
         },
-        refreshToken: {
-            type: String
-        },
+        refreshTokenHash: { type: String },
+        refreshTokenExpiresAt: { type: Date },
         forgotPasswordToken: {
-            type:String
+            type: String,
         },
         forgotPasswordExpiry: {
-            type: Date
+            type: Date,
         },
         emailVerificationToken: {
-            type: String
+            type: String,
         },
         emailVerificationExpiry: {
-            type: Date
-        }
-    }, {
-        timestamps: true
-    }
-)
+            type: Date,
+        },
+    },
+    {
+        timestamps: true,
+    },
+);
 
-userSchema.pre("save",async function(next){
-    if(!this.isModified("password")) return next()
-
-    this.password = await bcrypt.hash(this.password,10)
-})
+userSchema.pre("save", async function () {
+    if (!this.isModified("password")) return;
+    this.password = await bcrypt.hash(this.password, 10);
+});
 
 userSchema.methods.isPasswordCorrect = async function (password){
     return await bcrypt.compare(password,this.password)
