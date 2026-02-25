@@ -13,3 +13,12 @@ export const TaskStatusEnum = {
 }
 
 export const AvailableTaskStatus = Object.values(TaskStatusEnum)
+
+export const WorkspaceRolesEnum = {
+    OWNER: "owner",
+    ADMIN: "admin",
+    MEMBER: "member",
+    VIEWER: "viewer",
+};
+
+export const AvailableWorkspaceRoles = Object.values(WorkspaceRolesEnum);
