@@ -35,6 +35,11 @@ const workspaceMemberSchema = new Schema(
 
 // ✅ one user only once in a workspace
 workspaceMemberSchema.index({ workspace: 1, user: 1 }, { unique: true });
+// fetch all members in a workspace quickly
+workspaceMemberSchema.index({ workspace: 1, status: 1, role: 1 });
+
+// fetch all workspaces for a user quickly
+workspaceMemberSchema.index({ user: 1, status: 1, createdAt: -1 });
 
 export const WorkspaceMember = mongoose.model(
     "WorkspaceMember",

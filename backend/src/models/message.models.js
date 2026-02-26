@@ -56,4 +56,7 @@ const messageSchema = new mongoose.Schema(
 // Fast message pagination
 messageSchema.index({ conversation: 1, createdAt: -1 });
 
+// admin/audit feeds later
+messageSchema.index({ workspace: 1, createdAt: -1 }); 
+
 export const Message = mongoose.model("Message", messageSchema);

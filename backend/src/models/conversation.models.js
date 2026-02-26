@@ -65,4 +65,6 @@ conversationSchema.index(
   { unique: true, partialFilterExpression: { type: "task" } }
 );
 
+conversationSchema.index({ workspace: 1, updatedAt: -1 });
+
 export const Conversation = mongoose.model("Conversation", conversationSchema);

@@ -22,6 +22,7 @@ const taskSchema = new Schema(
             type: Schema.Types.ObjectId,
             ref: "Project",
             required: true,
+            index: true,
         },
         assignedTo: {
             type: Schema.Types.ObjectId,
@@ -50,5 +51,16 @@ const taskSchema = new Schema(
     },
     { timestamps: true },
 );
+
+// list tasks in project
+taskSchema.index({ workspace: 1, project: 1, createdAt: -1 }); 
+
+ // "my tasks"
+taskSchema.index({ workspace: 1, assignedTo: 1, status: 1, createdAt: -1 });
+
+ // kanban columns
+taskSchema.index({ project: 1, status: 1, createdAt: -1 });
+
+taskSchema.index({ workspace: 1, status: 1, createdAt: -1 });
 
 export const Tasks = mongoose.model("Task", taskSchema);

@@ -37,4 +37,6 @@ const projectSchema = new Schema(
 // Ensure that project names are unique within the same workspace
 projectSchema.index({ workspace: 1, name: 1 }, { unique: true });
 
+projectSchema.index({ workspace: 1, createdAt: -1 });
+
 export const Project = mongoose.model("Project", projectSchema);

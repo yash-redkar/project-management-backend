@@ -36,6 +36,12 @@ const projectMemberSchema = new Schema(
 
 projectMemberSchema.index({ project: 1, user: 1 }, { unique: true });
 
+// you often query by workspace+project+user in your permission middleware
+projectMemberSchema.index({ workspace: 1, project: 1, user: 1 });
+
+// list all projects for a user in a workspace
+projectMemberSchema.index({ user: 1, workspace: 1, createdAt: -1 });
+
 export const ProjectMember = mongoose.model(
     "ProjectMember",
     projectMemberSchema,

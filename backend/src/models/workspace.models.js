@@ -36,5 +36,6 @@ workspaceSchema.index(
     { unique: true }
 ); 
 workspaceSchema.index({ name: 1 });
+workspaceSchema.index({ createdBy: 1, createdAt: -1 });
 
 export const Workspace = mongoose.model("Workspace", workspaceSchema);
