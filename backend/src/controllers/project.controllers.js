@@ -456,6 +456,41 @@ const deleteMember = asyncHandler(async (req, res) => {
         );
 });
 
+const leaveProject = asyncHandler(async (req, res) => {
+    const { projectId } = req.params;
+
+    const membership = await ProjectMember.findOne({
+        project: projectId,
+        user: req.user._id,
+        status: "active",
+    });
+
+    if (!membership) {
+        throw new ApiError(404, "You are not a member of this project");
+    }
+
+    if (membership.role === "admin") {
+        const adminCount = await ProjectMember.countDocuments({
+            project: projectId,
+            status: "active",
+            role: "admin",
+        });
+
+        if (adminCount === 1) {
+            throw new ApiError(
+                400,
+                "You are the last admin of this project. Add another admin before leaving",
+            );
+        }
+    }
+
+    await ProjectMember.deleteOne({ _id: membership._id });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, null, "You left the project successfully"));
+});
+
 export {
     addMembersToProject,
     createProject,
@@ -466,4 +501,5 @@ export {
     getProjectsById,
     updateMemberRole,
     updateProject,
+    leaveProject,
 };

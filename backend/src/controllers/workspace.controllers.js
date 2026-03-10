@@ -98,3 +98,118 @@ export const getMyWorkspaces = asyncHandler(async (req, res) => {
         .status(200)
         .json(new ApiResponse(200, data, "Workspaces fetched successfully"));
 });
+
+export const leaveWorkspace = asyncHandler(async (req, res) => {
+    const { workspaceId } = req.params;
+
+    const membership = await WorkspaceMember.findOne({
+        workspace: workspaceId,
+        user: req.user._id,
+        status: "active",
+    });
+
+    if (!membership) {
+        throw new ApiError(404, "You are not a member of this workspace");
+    }
+
+    if (membership.role === "owner") {
+        throw new ApiError(
+            400,
+            "Workspace owner cannot leave directly. Transfer ownership first",
+        );
+    }
+
+    await WorkspaceMember.deleteOne({ _id: membership._id });
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, null, "You left the workspace successfully"),
+        );
+});
+
+export const transferWorkspaceOwnership = asyncHandler(async (req, res) => {
+    const { workspaceId } = req.params;
+    const { userId } = req.body;
+
+    if (!mongoose.isValidObjectId(workspaceId)) {
+        throw new ApiError(400, "Invalid workspaceId");
+    }
+
+    if (!mongoose.isValidObjectId(userId)) {
+        throw new ApiError(400, "Invalid userId");
+    }
+
+    const currentOwnerMembership = await WorkspaceMember.findOne({
+        workspace: workspaceId,
+        user: req.user._id,
+        status: "active",
+        role: WorkspaceRolesEnum.OWNER,
+    });
+
+    if (!currentOwnerMembership) {
+        throw new ApiError(403, "Only workspace owner can transfer ownership");
+    }
+
+    if (String(req.user._id) === String(userId)) {
+        throw new ApiError(400, "You are already the workspace owner");
+    }
+
+    const targetMember = await WorkspaceMember.findOne({
+        workspace: workspaceId,
+        user: userId,
+        status: "active",
+    }).populate("user", "username email");
+
+    if (!targetMember) {
+        throw new ApiError(
+            404,
+            "Target user is not an active workspace member",
+        );
+    }
+
+    if (targetMember.role === WorkspaceRolesEnum.OWNER) {
+        throw new ApiError(400, "Target user is already the workspace owner");
+    }
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+        await WorkspaceMember.updateOne(
+            { _id: currentOwnerMembership._id },
+            { $set: { role: WorkspaceRolesEnum.ADMIN } },
+            { session },
+        );
+
+        await WorkspaceMember.updateOne(
+            { _id: targetMember._id },
+            { $set: { role: WorkspaceRolesEnum.OWNER } },
+            { session },
+        );
+
+        await Workspace.updateOne(
+            { _id: workspaceId },
+            { $set: { createdBy: targetMember.user._id } },
+            { session },
+        );
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {
+                    previousOwner: req.user._id,
+                    newOwner: targetMember.user,
+                },
+                "Workspace ownership transferred successfully",
+            ),
+        );
+    } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+        throw error;
+    }
+});

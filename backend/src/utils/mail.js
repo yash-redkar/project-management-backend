@@ -15,7 +15,8 @@ const sendEmail = async(options) => {
 
     const transporter = nodemailer.createTransport({
         host: process.env.MAILTRAP_SMTP_HOST,
-        port: process.env.MAILTRAP_SMTP_PORT,
+        port: Number(process.env.MAILTRAP_SMTP_PORT),
+        secure: false,
         auth: {
             user: process.env.MAILTRAP_SMTP_USER,
             pass: process.env.MAILTRAP_SMTP_PASS,
@@ -76,8 +77,50 @@ const forgotPasswordMailgenContent = (username, passwordResetUrl) => {
     };
 };
 
+const workspaceInviteMailgenContent = (
+    username,
+    workspaceName,
+    acceptUrl,
+) => ({
+    body: {
+        name: username,
+        intro: `You have been invited to join workspace "${workspaceName}".`,
+        action: {
+            instructions: "Click the button to accept the invite:",
+            button: {
+                color: "#22BC66",
+                text: "Accept Invite",
+                link: acceptUrl,
+            },
+        },
+        outro: "If you did not expect this invite, you can ignore this email.",
+    },
+});
+
+const projectInviteMailgenContent = (
+    username,
+    projectName,
+    acceptUrl,
+) => ({
+    body: {
+        name: username,
+        intro: `You have been invited to join project "${projectName}".`,
+        action: {
+            instructions: "Click the button to accept the invite:",
+            button: {
+                color: "#22BC66",
+                text: "Accept Invite",
+                link: acceptUrl,
+            },
+        },
+        outro: "If you did not expect this invite, you can ignore this email.",
+    },
+});
+
 export{
     emailVerificationMailgenContent,
     forgotPasswordMailgenContent,
+    workspaceInviteMailgenContent,
+    projectInviteMailgenContent,
     sendEmail
 }

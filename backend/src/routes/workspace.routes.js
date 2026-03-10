@@ -5,6 +5,8 @@ import { createWorkspaceValidator } from "../validators/workspace.validators.js"
 import {
     createWorkspace,
     getMyWorkspaces,
+    leaveWorkspace,
+    transferWorkspaceOwnership
 } from "../controllers/workspace.controllers.js";
 import workspaceMemberRouter from "./workspaceMember.routes.js";
 import workspaceProjectRouter from "./workspaceProject.routes.js";
@@ -17,9 +19,14 @@ router
     .route("/")
     .post(createWorkspaceValidator(), validate, createWorkspace)
     .get(getMyWorkspaces);
+    
+router.post("/:workspaceId/leave", leaveWorkspace);
+router.patch(
+    "/:workspaceId/transfer-ownership",
+    transferWorkspaceOwnership,
+);
 
 router.use("/:workspaceId/members", workspaceMemberRouter);
 router.use("/:workspaceId/projects", workspaceProjectRouter);
-
 
 export default router;

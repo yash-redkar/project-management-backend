@@ -54,6 +54,8 @@ import projectRouter from "./routes/project.routes.js";
 import taskRouter from "./routes/task.routes.js";
 import workspaceRouter from "./routes/workspace.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
+import workspaceInviteRoutes from "./routes/workspaceInvite.routes.js";
+import projectInviteRoutes from "./routes/projectInvite.routes.js";
 
 app.use("/api/v1/healthcheck", healthCheckRouter);
 app.use("/api/v1/auth", authRouter);
@@ -64,9 +66,23 @@ app.use(
 );
 app.use("/api/v1/workspaces", workspaceRouter);
 app.use("/api/v1/chat", chatRoutes);
+app.use("/api/v1", workspaceInviteRoutes);
+app.use("/api/v1", projectInviteRoutes);
 
 app.get("/", (req, res) => {
     res.send("Welcome to basecampy");
+});
+
+// global error handler - MUST BE LAST
+app.use((err, req, res, next) => {
+    const statusCode = err.statusCode || 500;
+
+    return res.status(statusCode).json({
+        statusCode,
+        message: err.message || "Internal Server Error",
+        success: false,
+        ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    });
 });
 
 export default app;

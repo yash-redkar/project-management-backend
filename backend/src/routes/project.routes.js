@@ -9,6 +9,7 @@ import {
     getProjectsById,
     updateMemberRole,
     updateProject,
+    leaveProject
 } from "../controllers/project.controllers.js";
 import { validate } from "../middlewares/validator.middleware.js";
 import {
@@ -32,6 +33,8 @@ router
     .get(validateProjectPermission(AvailableUserRole), getProjectsById)
     .put(validateProjectPermission([UserRolesEnum.ADMIN]), validate, updateProject)
     .delete(validateProjectPermission([UserRolesEnum.ADMIN]), deleteProject);
+
+router.post("/:projectId/leave", leaveProject);
 
 router
     .route("/:projectId/members")
