@@ -63,4 +63,6 @@ taskSchema.index({ project: 1, status: 1, createdAt: -1 });
 
 taskSchema.index({ workspace: 1, status: 1, createdAt: -1 });
 
+taskSchema.index({ title: "text", description: "text" });
+
 export const Tasks = mongoose.model("Task", taskSchema);

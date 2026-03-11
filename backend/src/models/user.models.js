@@ -105,5 +105,11 @@ userSchema.methods.generateTemporaryToken = function(){
     return {unHashedToken, hashedToken, tokenExpiry}
 };
 
+userSchema.index({
+    username: "text",
+    fullName: "text",
+    email: "text",
+});
+
 export const User = mongoose.model("User",userSchema)
 
