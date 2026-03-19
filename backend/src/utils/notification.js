@@ -3,6 +3,7 @@ import { getIO } from "../socket/index.js";
 
 export const createNotification = async ({
     user,
+    actor = null,
     workspace = null,
     project = null,
     task = null,
@@ -12,6 +13,7 @@ export const createNotification = async ({
 }) => {
     const notification = await Notification.create({
         user,
+        actor,
         workspace,
         project,
         task,
@@ -25,12 +27,14 @@ export const createNotification = async ({
 
         io.to(user.toString()).emit("notification", {
             _id: notification._id,
+            actor,
             type,
             message,
             workspace,
             project,
             task,
             meta,
+            isRead: notification.isRead,
             createdAt: notification.createdAt,
         });
     } catch (error) {

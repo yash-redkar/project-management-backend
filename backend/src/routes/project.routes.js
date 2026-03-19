@@ -13,7 +13,7 @@ import {
 } from "../controllers/project.controllers.js";
 import { validate } from "../middlewares/validator.middleware.js";
 import {
-    createProjectValidator,addMemberToProjectValidator
+    createProjectValidator,updateProjectValidator,addMemberToProjectValidator
 } from "../validators/index.js";
 import { 
     verifyJWT, validateProjectPermission
@@ -31,7 +31,12 @@ router
 router
     .route("/:projectId")
     .get(validateProjectPermission(AvailableUserRole), getProjectsById)
-    .put(validateProjectPermission([UserRolesEnum.ADMIN]), validate, updateProject)
+    .put(
+        validateProjectPermission([UserRolesEnum.ADMIN]),
+        updateProjectValidator(),
+        validate,
+        updateProject,
+    )
     .delete(validateProjectPermission([UserRolesEnum.ADMIN]), deleteProject);
 
 router.post("/:projectId/leave", leaveProject);

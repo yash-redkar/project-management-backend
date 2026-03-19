@@ -11,6 +11,7 @@ export const getNotifications = asyncHandler(async (req, res) => {
         user: req.user._id,
     })
         .select("-__v -updatedAt -user")
+        .populate("actor", "username fullName fullname name email avatar")
         .populate("workspace", "name")
         .populate("project", "name")
         .populate("task", "title")
@@ -51,7 +52,12 @@ export const markNotificationAsRead = asyncHandler(async (req, res) => {
             $set: { isRead: true },
         },
         { new: true },
-    ).select("-__v -updatedAt");
+    )
+        .select("-__v -updatedAt")
+        .populate("actor", "username fullName fullname name email avatar")
+        .populate("workspace", "name")
+        .populate("project", "name")
+        .populate("task", "title");
 
     if (!notification) {
         throw new ApiError(404, "Notification not found");

@@ -7,8 +7,8 @@ import { asyncHandler } from "../utils/async-handler.js";
 import mongoose from "mongoose";
 import { AvailableUserRole, UserRolesEnum } from "../utils/constants.js";
 import { createActivityLog } from "../utils/activity-log.js";
+import { Tasks } from "../models/task.models.js";
 
-// ✅ helper: ensure project belongs to workspace
 const getWorkspaceProjectOrThrow = async (workspaceId, projectId) => {
     const project = await Project.findOne({
         _id: projectId,
@@ -27,6 +27,7 @@ const getProjects = asyncHandler(async (req, res) => {
             $match: {
                 workspace: new mongoose.Types.ObjectId(workspaceId),
                 user: new mongoose.Types.ObjectId(req.user._id),
+                status: "active",
             },
         },
         {
@@ -44,13 +45,74 @@ const getProjects = asyncHandler(async (req, res) => {
                     {
                         $lookup: {
                             from: "projectmembers",
-                            localField: "_id",
-                            foreignField: "project",
+                            let: { projectId: "$_id" },
+                            pipeline: [
+                                {
+                                    $match: {
+                                        $expr: {
+                                            $and: [
+                                                {
+                                                    $eq: [
+                                                        "$project",
+                                                        "$$projectId",
+                                                    ],
+                                                },
+                                                { $eq: ["$status", "active"] },
+                                            ],
+                                        },
+                                    },
+                                },
+                            ],
                             as: "projectMembers",
                         },
                     },
-                    { $addFields: { members: { $size: "$projectMembers" } } },
-                    { $project: { projectMembers: 0 } },
+                    {
+                        $lookup: {
+                            from: "tasks",
+                            let: { projectId: "$_id" },
+                            pipeline: [
+                                {
+                                    $match: {
+                                        $expr: {
+                                            $eq: ["$project", "$$projectId"],
+                                        },
+                                    },
+                                },
+                            ],
+                            as: "projectTasks",
+                        },
+                    },
+                    {
+                        $addFields: {
+                            membersCount: { $size: "$projectMembers" },
+                            tasksCount: { $size: "$projectTasks" },
+                            completedTasksCount: {
+                                $size: {
+                                    $filter: {
+                                        input: "$projectTasks",
+                                        as: "task",
+                                        cond: {
+                                            $eq: ["$$task.status", "done"],
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    {
+                        $project: {
+                            _id: 1,
+                            workspace: 1,
+                            name: 1,
+                            description: 1,
+                            status: 1,
+                            createdAt: 1,
+                            createdBy: 1,
+                            membersCount: 1,
+                            tasksCount: 1,
+                            completedTasksCount: 1,
+                        },
+                    },
                 ],
             },
         },
@@ -64,7 +126,10 @@ const getProjects = asyncHandler(async (req, res) => {
                     workspace: "$project.workspace",
                     name: "$project.name",
                     description: "$project.description",
-                    members: "$project.members",
+                    status: "$project.status",
+                    membersCount: "$project.membersCount",
+                    tasksCount: "$project.tasksCount",
+                    completedTasksCount: "$project.completedTasksCount",
                     createdAt: "$project.createdAt",
                     createdBy: "$project.createdBy",
                 },
@@ -80,28 +145,39 @@ const getProjects = asyncHandler(async (req, res) => {
 const getProjectsById = asyncHandler(async (req, res) => {
     const { workspaceId, projectId } = req.params;
 
-    // project must belong to workspace
     const project = await getWorkspaceProjectOrThrow(workspaceId, projectId);
 
-    // membership check
     const member = await ProjectMember.findOne({
         workspace: workspaceId,
         project: projectId,
         user: req.user._id,
+        status: "active",
     });
 
     if (!member) {
         throw new ApiError(403, "You are not a member of this project");
     }
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, project, "Project fetched successfully"));
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                project,
+                role: member.role,
+                membershipStatus: member.status,
+            },
+            "Project fetched successfully",
+        ),
+    );
 });
 
 const createProject = asyncHandler(async (req, res) => {
-    const { name, description } = req.body;
+    const { name, description, status } = req.body;
     const { workspaceId } = req.params;
+
+    const safeStatus = ["todo", "in_progress", "done"].includes(status)
+        ? status
+        : "todo";
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -113,6 +189,7 @@ const createProject = asyncHandler(async (req, res) => {
                     workspace: new mongoose.Types.ObjectId(workspaceId),
                     name,
                     description,
+                    status: safeStatus,
                     createdBy: new mongoose.Types.ObjectId(req.user._id),
                 },
             ],
@@ -126,6 +203,7 @@ const createProject = asyncHandler(async (req, res) => {
                     project: new mongoose.Types.ObjectId(project._id),
                     user: new mongoose.Types.ObjectId(req.user._id),
                     role: UserRolesEnum.ADMIN,
+                    status: "active",
                 },
             ],
             { session },
@@ -143,6 +221,7 @@ const createProject = asyncHandler(async (req, res) => {
             message: `Project "${project.name}" was created`,
             meta: {
                 projectName: project.name,
+                status: project.status,
             },
         });
 
@@ -159,7 +238,6 @@ const createProject = asyncHandler(async (req, res) => {
         await session.abortTransaction();
         session.endSession();
 
-        // optional: handle duplicate per workspace name nicely
         if (error?.code === 11000) {
             throw new ApiError(
                 409,
@@ -171,7 +249,7 @@ const createProject = asyncHandler(async (req, res) => {
 });
 
 const updateProject = asyncHandler(async (req, res) => {
-    const { name, description } = req.body;
+    const { name, description, status } = req.body;
     const { workspaceId, projectId } = req.params;
 
     await getWorkspaceProjectOrThrow(workspaceId, projectId);
@@ -181,13 +259,27 @@ const updateProject = asyncHandler(async (req, res) => {
         project: projectId,
         user: req.user._id,
         role: UserRolesEnum.ADMIN,
+        status: "active",
     });
 
     if (!admin) throw new ApiError(403, "Only admin can perform this action");
 
+    const updatePayload = {};
+
+    if (typeof name === "string") updatePayload.name = name;
+    if (typeof description === "string")
+        updatePayload.description = description;
+
+    if (typeof status === "string") {
+        if (!["todo", "in_progress", "done"].includes(status)) {
+            throw new ApiError(400, "Invalid project status");
+        }
+        updatePayload.status = status;
+    }
+
     const project = await Project.findOneAndUpdate(
         { _id: projectId, workspace: workspaceId },
-        { name, description },
+        updatePayload,
         { new: true },
     );
 
@@ -202,6 +294,7 @@ const updateProject = asyncHandler(async (req, res) => {
         message: `Project "${project.name}" was updated`,
         meta: {
             projectName: project.name,
+            status: project.status,
         },
     });
 
@@ -220,6 +313,7 @@ const deleteProject = asyncHandler(async (req, res) => {
         project: projectId,
         user: req.user._id,
         role: UserRolesEnum.ADMIN,
+        status: "active",
     });
 
     if (!admin) throw new ApiError(403, "Only admin can perform this action");
@@ -330,6 +424,7 @@ const getProjectMembers = asyncHandler(async (req, res) => {
         workspace: workspaceId,
         project: projectId,
         user: req.user._id,
+        status: "active",
     });
 
     if (!member)
@@ -340,6 +435,7 @@ const getProjectMembers = asyncHandler(async (req, res) => {
             $match: {
                 workspace: new mongoose.Types.ObjectId(workspaceId),
                 project: new mongoose.Types.ObjectId(projectId),
+                status: "active",
             },
         },
         {
@@ -368,6 +464,7 @@ const getProjectMembers = asyncHandler(async (req, res) => {
                 _id: 0,
                 user: "$userDetails",
                 role: 1,
+                status: 1,
                 createdAt: 1,
                 updatedAt: 1,
             },
@@ -396,6 +493,7 @@ const updateMemberRole = asyncHandler(async (req, res) => {
         project: projectId,
         user: req.user._id,
         role: UserRolesEnum.ADMIN,
+        status: "active",
     });
 
     if (!admin) throw new ApiError(403, "Only admin can perform this action");
@@ -407,11 +505,13 @@ const updateMemberRole = asyncHandler(async (req, res) => {
         workspace: workspaceId,
         project: projectId,
         user: userId,
+        status: "active",
     });
 
     if (!projectMember) throw new ApiError(404, "Project member not found");
 
-    // prevent removing last admin
+    const oldRole = projectMember.role;
+
     if (
         projectMember.role === UserRolesEnum.ADMIN &&
         role !== UserRolesEnum.ADMIN
@@ -420,6 +520,7 @@ const updateMemberRole = asyncHandler(async (req, res) => {
             workspace: workspaceId,
             project: projectId,
             role: UserRolesEnum.ADMIN,
+            status: "active",
         });
 
         if (adminCount === 1)
@@ -467,6 +568,7 @@ const deleteMember = asyncHandler(async (req, res) => {
         project: projectId,
         user: req.user._id,
         role: UserRolesEnum.ADMIN,
+        status: "active",
     });
 
     if (!admin) throw new ApiError(403, "Only admin can perform this action");
@@ -479,6 +581,7 @@ const deleteMember = asyncHandler(async (req, res) => {
         workspace: workspaceId,
         project: projectId,
         user: userId,
+        status: "active",
     });
 
     if (!projectMember) throw new ApiError(404, "Project member not found");
@@ -488,6 +591,7 @@ const deleteMember = asyncHandler(async (req, res) => {
             workspace: workspaceId,
             project: projectId,
             role: UserRolesEnum.ADMIN,
+            status: "active",
         });
 
         if (adminCount === 1)
@@ -520,11 +624,11 @@ const leaveProject = asyncHandler(async (req, res) => {
         throw new ApiError(404, "You are not a member of this project");
     }
 
-    if (membership.role === "admin") {
+    if (membership.role === UserRolesEnum.ADMIN) {
         const adminCount = await ProjectMember.countDocuments({
             project: projectId,
             status: "active",
-            role: "admin",
+            role: UserRolesEnum.ADMIN,
         });
 
         if (adminCount === 1) {
@@ -534,7 +638,6 @@ const leaveProject = asyncHandler(async (req, res) => {
             );
         }
     }
-
     await ProjectMember.deleteOne({ _id: membership._id });
 
     await createActivityLog({

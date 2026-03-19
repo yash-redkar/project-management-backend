@@ -165,7 +165,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Email verification token is missing");
     }
 
-    let hashedToken = crypto
+    const hashedToken = crypto
         .createHash("sha256")
         .update(verificationToken)
         .digest("hex");
@@ -174,25 +174,20 @@ const verifyEmail = asyncHandler(async (req, res) => {
         emailVerificationToken: hashedToken,
         emailVerificationExpiry: { $gt: Date.now() },
     });
+
     if (!user) {
-        throw new ApiError(400, "Token is invalid or expired");
+        return res.redirect(
+            `${process.env.FRONTEND_URL}/settings?verified=failed`,
+        );
     }
 
     user.emailVerificationToken = undefined;
     user.emailVerificationExpiry = undefined;
-
     user.isEmailVerified = true;
+
     await user.save({ validateBeforeSave: false });
 
-    return res
-        .status(200)
-        .json(
-            new ApiResponse(
-                200,
-                { isEmailVerified: true },
-                "Email is verified",
-            ),
-        );
+    return res.redirect(`${process.env.FRONTEND_URL}/settings?verified=true`);
 });
 
 const resendEmailVerfication = asyncHandler(async (req, res) => {
@@ -368,6 +363,35 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, {}, "Password changed successfully"));
 });
 
+const updateAccountDetails = asyncHandler(async (req, res) => {
+    const { fullName } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                fullName: fullName.trim(),
+            },
+        },
+        {
+            new: true,
+            runValidators: true,
+        },
+    ).select(
+        "-password -refreshTokenHash -refreshTokenExpiresAt -emailVerificationToken -emailVerificationExpiry -forgotPasswordToken -forgotPasswordExpiry",
+    );
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, user, "Account details updated successfully"),
+        );
+});
+
 export {
     registerUser,
     login,
@@ -379,4 +403,5 @@ export {
     forgotPasswordRequest,
     resetForgotPassword,
     changeCurrentPassword,
+    updateAccountDetails,
 };

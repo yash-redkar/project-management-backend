@@ -24,6 +24,13 @@ const projectSchema = new Schema(
             default: "",
         },
 
+        status: {
+            type: String,
+            enum: ["todo", "in_progress", "done"],
+            default: "todo",
+            index: true,
+        },
+
         createdBy: {
             type: Schema.Types.ObjectId,
             ref: "User",
@@ -31,16 +38,15 @@ const projectSchema = new Schema(
             index: true,
         },
     },
-    { timestamps: true,
-        versionKey: false
-     },
+    {
+        timestamps: true,
+        versionKey: false,
+    },
 );
 
-// Ensure that project names are unique within the same workspace
 projectSchema.index({ workspace: 1, name: 1 }, { unique: true });
-
 projectSchema.index({ workspace: 1, createdAt: -1 });
-
+projectSchema.index({ workspace: 1, status: 1 });
 projectSchema.index({ name: "text", description: "text" });
 
 export const Project = mongoose.model("Project", projectSchema);

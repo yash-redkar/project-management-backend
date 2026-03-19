@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { User } from "../models/user.models.js";
 import { Project } from "../models/project.models.js";
 import { ProjectMember } from "../models/projectmember.models.js";
+import { WorkspaceMember } from "../models/workspacemember.models.js";
 
 import { ApiError } from "../utils/api-error.js";
 import { ApiResponse } from "../utils/api-response.js";
@@ -20,27 +21,60 @@ const makeInviteToken = () => {
         .createHash("sha256")
         .update(unHashedToken)
         .digest("hex");
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     return { unHashedToken, hashedToken, expiresAt };
 };
 
+const ensureProjectAdminAccess = async (workspaceId, projectId, userId) => {
+    const membership = await ProjectMember.findOne({
+        workspace: workspaceId,
+        project: projectId,
+        user: userId,
+        status: "active",
+    });
+
+    if (!membership) {
+        throw new ApiError(403, "You are not a member of this project");
+    }
+
+    if (membership.role !== UserRolesEnum.ADMIN) {
+        throw new ApiError(403, "Only project admin can perform this action");
+    }
+
+    return membership;
+};
+
 export const inviteToProject = asyncHandler(async (req, res) => {
-    const { projectId } = req.params;
+    const { workspaceId, projectId } = req.params;
     const { email, role } = req.body;
 
-    if (!mongoose.isValidObjectId(projectId))
+    if (!mongoose.isValidObjectId(workspaceId)) {
+        throw new ApiError(400, "Invalid workspaceId");
+    }
+
+    if (!mongoose.isValidObjectId(projectId)) {
         throw new ApiError(400, "Invalid projectId");
-    if (!email) throw new ApiError(400, "Email is required");
+    }
 
-    const project = await Project.findById(projectId);
-    if (!project) throw new ApiError(404, "Project not found");
+    if (!email) {
+        throw new ApiError(400, "Email is required");
+    }
 
-    await ensureProjectAdminAccess(projectId, req.user._id);
+    const normalizedEmail = email.toLowerCase().trim();
 
-    const invitedUser = await User.findOne({
-        email: email.toLowerCase().trim(),
+    const project = await Project.findOne({
+        _id: projectId,
+        workspace: workspaceId,
     });
+
+    if (!project) {
+        throw new ApiError(404, "Project not found in this workspace");
+    }
+
+    await ensureProjectAdminAccess(workspaceId, projectId, req.user._id);
+
+    const invitedUser = await User.findOne({ email: normalizedEmail });
 
     if (!invitedUser) {
         throw new ApiError(
@@ -49,7 +83,27 @@ export const inviteToProject = asyncHandler(async (req, res) => {
         );
     }
 
+    const workspaceMember = await WorkspaceMember.findOne({
+        workspace: workspaceId,
+        user: invitedUser._id,
+        status: "active",
+    });
+
+    if (!workspaceMember) {
+        throw new ApiError(
+            400,
+            "User must be an active workspace member before being invited to this project",
+        );
+    }
+
+    const safeRole = role || UserRolesEnum.MEMBER;
+
+    if (![UserRolesEnum.ADMIN, UserRolesEnum.MEMBER].includes(safeRole)) {
+        throw new ApiError(400, "Invalid role");
+    }
+
     const existing = await ProjectMember.findOne({
+        workspace: workspaceId,
         project: projectId,
         user: invitedUser._id,
     });
@@ -68,7 +122,7 @@ export const inviteToProject = asyncHandler(async (req, res) => {
         workspace: project.workspace,
         project: projectId,
         user: invitedUser._id,
-        role: role || "member",
+        role: safeRole,
         status: "invited",
         invitedBy: req.user._id,
         inviteTokenHash: hashedToken,
@@ -89,6 +143,7 @@ export const inviteToProject = asyncHandler(async (req, res) => {
 
     await createNotification({
         user: invitedUser._id,
+        actor: req.user._id,
         workspace: project.workspace,
         project: project._id,
         type: "project_invite",
@@ -96,7 +151,7 @@ export const inviteToProject = asyncHandler(async (req, res) => {
         meta: {
             invitedBy: req.user._id,
             invitedByEmail: req.user.email,
-            role: role || "member",
+            role: safeRole,
         },
     });
 
@@ -110,7 +165,7 @@ export const inviteToProject = asyncHandler(async (req, res) => {
         meta: {
             invitedUserId: invitedUser._id,
             invitedEmail: invitedUser.email,
-            role: role || "member",
+            role: safeRole,
         },
     });
 
@@ -127,7 +182,10 @@ export const inviteToProject = asyncHandler(async (req, res) => {
 
 export const acceptProjectInvite = asyncHandler(async (req, res) => {
     const { token } = req.params;
-    if (!token) throw new ApiError(400, "Token missing");
+
+    if (!token) {
+        throw new ApiError(400, "Token missing");
+    }
 
     const hashed = crypto.createHash("sha256").update(token).digest("hex");
 
@@ -137,9 +195,10 @@ export const acceptProjectInvite = asyncHandler(async (req, res) => {
         status: "invited",
     });
 
-    if (!member) throw new ApiError(400, "Invite token invalid or expired");
+    if (!member) {
+        throw new ApiError(400, "Invite token invalid or expired");
+    }
 
-    // ✅ security: only invited user can accept
     if (String(member.user) !== String(req.user._id)) {
         throw new ApiError(403, "This invite is not for your account");
     }
@@ -169,11 +228,12 @@ export const acceptProjectInvite = asyncHandler(async (req, res) => {
 });
 
 export const getProjectPendingInvites = asyncHandler(async (req, res) => {
-    const { projectId } = req.params;
+    const { workspaceId, projectId } = req.params;
 
-    await ensureProjectAdminAccess(projectId, req.user._id);
+    await ensureProjectAdminAccess(workspaceId, projectId, req.user._id);
 
     const invites = await ProjectMember.find({
+        workspace: workspaceId,
         project: projectId,
         status: "invited",
     })
@@ -193,12 +253,13 @@ export const getProjectPendingInvites = asyncHandler(async (req, res) => {
 });
 
 export const cancelProjectInvite = asyncHandler(async (req, res) => {
-    const { projectId, memberId } = req.params;
+    const { workspaceId, projectId, memberId } = req.params;
 
-    await ensureProjectAdminAccess(projectId, req.user._id);
+    await ensureProjectAdminAccess(workspaceId, projectId, req.user._id);
 
     const invitedMember = await ProjectMember.findOne({
         _id: memberId,
+        workspace: workspaceId,
         project: projectId,
         status: "invited",
     });
@@ -230,12 +291,13 @@ export const cancelProjectInvite = asyncHandler(async (req, res) => {
 });
 
 export const resendProjectInvite = asyncHandler(async (req, res) => {
-    const { projectId, memberId } = req.params;
+    const { workspaceId, projectId, memberId } = req.params;
 
-    await ensureProjectAdminAccess(projectId, req.user._id);
+    await ensureProjectAdminAccess(workspaceId, projectId, req.user._id);
 
     const invitedMember = await ProjectMember.findOne({
         _id: memberId,
+        workspace: workspaceId,
         project: projectId,
         status: "invited",
     }).populate("user", "email username");
@@ -244,10 +306,13 @@ export const resendProjectInvite = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Pending project invite not found");
     }
 
-    const project = await Project.findById(projectId);
+    const project = await Project.findOne({
+        _id: projectId,
+        workspace: workspaceId,
+    });
 
     if (!project) {
-        throw new ApiError(404, "Project not found");
+        throw new ApiError(404, "Project not found in this workspace");
     }
 
     const unHashedToken = crypto.randomBytes(32).toString("hex");
@@ -294,17 +359,25 @@ export const resendProjectInvite = asyncHandler(async (req, res) => {
 });
 
 export const cleanupExpiredProjectInvites = asyncHandler(async (req, res) => {
-    const { projectId } = req.params;
+    const { workspaceId, projectId } = req.params;
 
-    await ensureProjectAdminAccess(projectId, req.user._id);
+    await ensureProjectAdminAccess(workspaceId, projectId, req.user._id);
 
     const result = await ProjectMember.deleteMany({
+        workspace: workspaceId,
         project: projectId,
         status: "invited",
         inviteExpiresAt: { $lt: new Date() },
     });
 
-    const project = await Project.findById(projectId);
+    const project = await Project.findOne({
+        _id: projectId,
+        workspace: workspaceId,
+    });
+
+    if (!project) {
+        throw new ApiError(404, "Project not found in this workspace");
+    }
 
     await createActivityLog({
         workspace: project.workspace,
@@ -328,21 +401,3 @@ export const cleanupExpiredProjectInvites = asyncHandler(async (req, res) => {
             ),
         );
 });
-
-const ensureProjectAdminAccess = async (projectId, userId) => {
-    const membership = await ProjectMember.findOne({
-        project: projectId,
-        user: userId,
-        status: "active",
-    });
-
-    if (!membership) {
-        throw new ApiError(403, "You are not a member of this project");
-    }
-
-    if (membership.role !== "admin") {
-        throw new ApiError(403, "Only project admin can perform this action");
-    }
-
-    return membership;
-};

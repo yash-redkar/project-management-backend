@@ -10,6 +10,7 @@ import {
     resendEmailVerfication,
     resetForgotPassword,
     verifyEmail,
+    updateAccountDetails,
 } from "../controllers/auth.controllers.js";
 import { validate } from "../middlewares/validator.middleware.js";
 import {
@@ -18,6 +19,7 @@ import {
     userLoginValidator,
     userRegisterValidator,
     userResetForgotPasswordValidator,
+    userUpdateAccountValidator,
 } from "../validators/index.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -38,6 +40,14 @@ router
 //secure routes
 router.route("/logout").post(verifyJWT, logoutUser);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
+router
+    .route("/update-account")
+    .patch(
+        verifyJWT,
+        userUpdateAccountValidator(),
+        validate,
+        updateAccountDetails,
+    );
 router
     .route("/change-password")
     .post(

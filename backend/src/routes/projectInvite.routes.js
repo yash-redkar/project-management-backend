@@ -6,40 +6,38 @@ import {
     getProjectPendingInvites,
     cancelProjectInvite,
     resendProjectInvite,
-    cleanupExpiredProjectInvites
+    cleanupExpiredProjectInvites,
 } from "../controllers/projectInvite.controllers.js";
 
 const router = Router();
 
 router.use(verifyJWT);
 
-// send invite (admin only check is inside controller)
 router.post(
-    "/workspaces/:workspaceId/projects/:projectId/invite",
+    "/workspaces/:workspaceId/projects/:projectId/invites",
     inviteToProject,
 );
 
-// accept invite
-router.get("/invites/project/:token/accept", acceptProjectInvite);
-
-router.get("/projects/:projectId/invites", verifyJWT, getProjectPendingInvites);
+router.get(
+    "/workspaces/:workspaceId/projects/:projectId/invites",
+    getProjectPendingInvites,
+);
 
 router.delete(
-    "/projects/:projectId/invites/expired",
-    verifyJWT,
+    "/workspaces/:workspaceId/projects/:projectId/invites/expired",
     cleanupExpiredProjectInvites,
 );
 
 router.post(
-    "/projects/:projectId/invites/:memberId/resend",
-    verifyJWT,
+    "/workspaces/:workspaceId/projects/:projectId/invites/:memberId/resend",
     resendProjectInvite,
 );
 
 router.delete(
-    "/projects/:projectId/invites/:memberId",
-    verifyJWT,
+    "/workspaces/:workspaceId/projects/:projectId/invites/:memberId",
     cancelProjectInvite,
 );
+
+router.get("/invites/project/:token/accept", acceptProjectInvite);
 
 export default router;

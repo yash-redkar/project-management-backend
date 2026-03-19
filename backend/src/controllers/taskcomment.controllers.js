@@ -98,8 +98,8 @@ const createComment = asyncHandler(async (req, res) => {
         task: taskId,
         actor: userId,
         entityType: "task",
-        action: "task_comment_added",
-        message: `Comment added on task "${task.title}"`,
+        action: "task_comment_created",
+        message: "added a comment",
         meta: {
             commentId: comment._id,
             taskTitle: task.title,
@@ -111,6 +111,7 @@ const createComment = asyncHandler(async (req, res) => {
     if (task.assignedTo && task.assignedTo.toString() !== userId.toString()) {
         await createNotification({
             user: task.assignedTo,
+            actor: req.user._id,
             workspace: workspaceId,
             project: projectId,
             task: taskId,
@@ -135,6 +136,7 @@ const createComment = asyncHandler(async (req, res) => {
 
         await createNotification({
             user: mentionUserId,
+            actor: req.user._id,
             workspace: workspaceId,
             project: projectId,
             task: taskId,
@@ -246,20 +248,6 @@ const updateComment = asyncHandler(async (req, res) => {
         .populate("author", "username email avatar")
         .populate("mentions", "username email avatar");
 
-    await createActivityLog({
-        workspace: workspaceId,
-        project: projectId,
-        task: taskId,
-        actor: userId,
-        entityType: "task",
-        action: "task_comment_updated",
-        message: `Comment updated on task "${task.title}"`,
-        meta: {
-            commentId: comment._id,
-            taskTitle: task.title,
-        },
-    });
-
     const io = req.app.get("io");
     io?.to(`project:${workspaceId}:${projectId}`).emit(
         "comment_updated",
@@ -342,7 +330,7 @@ const deleteComment = asyncHandler(async (req, res) => {
         actor: userId,
         entityType: "task",
         action: "task_comment_deleted",
-        message: `Comment deleted from task "${task.title}"`,
+        message: "deleted a comment",
         meta: {
             commentId,
             taskTitle: task.title,

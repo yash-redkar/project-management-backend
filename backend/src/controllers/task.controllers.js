@@ -1,4 +1,4 @@
-import { User } from "../models/user.models.js";
+
 import { Project } from "../models/project.models.js";
 import { Tasks } from "../models/task.models.js";
 import { SubTask } from "../models/subtask.models.js";
@@ -7,10 +7,11 @@ import { ApiResponse } from "../utils/api-response.js";
 import { ApiError } from "../utils/api-error.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import mongoose from "mongoose";
-import { AvailableUserRole, UserRolesEnum } from "../utils/constants.js";
+import { UserRolesEnum } from "../utils/constants.js";
 import { v2 as cloudinary } from "cloudinary";
 import { createNotification } from "../utils/notification.js";
 import { createActivityLog } from "../utils/activity-log.js";
+import { WorkspaceMember } from "../models/workspacemember.models.js";
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -33,22 +34,38 @@ const checkProjectMembership = async (userId, workspaceId, projectId) => {
 };
 
 // Helper: Delete attachment from Cloudinary
-const deleteFromCloudinary = async (public_id) => {
+const deleteFromCloudinary = async (public_id, resource_type = "image") => {
     try {
         if (!public_id) return;
-        await cloudinary.uploader.destroy(public_id, { resource_type: "auto" });
+
+        await cloudinary.uploader.destroy(public_id, {
+            resource_type,
+        });
     } catch (error) {
         console.error("Cloudinary deletion error:", error);
     }
 };
 
+
 // Helper: Delete multiple attachments
 const deleteMultipleAttachments = async (attachments) => {
     if (!attachments || attachments.length === 0) return;
+
     await Promise.all(
-        attachments.map((att) => deleteFromCloudinary(att.public_id)),
+        attachments.map((att) => {
+            const fallbackResourceType =
+                att.resource_type ||
+                (att.mimetype?.startsWith("image/")
+                    ? "image"
+                    : att.mimetype?.startsWith("video/")
+                      ? "video"
+                      : "raw");
+
+            return deleteFromCloudinary(att.public_id, fallbackResourceType);
+        }),
     );
 };
+
 
 const normalizeAssignedTo = (value) => {
     if (value === undefined) return undefined;
@@ -127,8 +144,60 @@ const getTasks = asyncHandler(async (req, res) => {
     );
 });
 
+const getWorkspaceTasks = asyncHandler(async (req, res) => {
+    const { workspaceId } = req.params;
+    const { status, assignedTo, mine, limit } = req.query;
+    const userId = req.user._id;
+
+    const member = await WorkspaceMember.findOne({
+        workspace: workspaceId,
+        user: userId,
+        status: "active",
+    });
+
+    if (!member) {
+        throw new ApiError(403, "Access denied: Not a workspace member");
+    }
+
+    const pageSize = Math.min(parseInt(limit || "200", 10), 500);
+
+    const query = {
+        workspace: workspaceId,
+    };
+
+    if (status) {
+        query.status = status;
+    }
+
+    if (mine === "true") {
+        query.assignedTo = userId;
+    } else if (assignedTo) {
+        query.assignedTo = assignedTo;
+    }
+
+    const tasks = await Tasks.find(query)
+        .sort({ dueDate: 1, createdAt: -1 })
+        .limit(pageSize)
+        .populate("project", "name")
+        .populate("assignedTo", "username email avatar fullName")
+        .populate("assignedBy", "username email fullName")
+        .lean();
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                items: tasks,
+                limit: pageSize,
+            },
+            "Workspace tasks fetched successfully",
+        ),
+    );
+});
+
 const createTask = asyncHandler(async (req, res) => {
-    const { title, description, projectId, assignedTo } = req.body;
+    const { title, description, projectId, assignedTo, dueDate, priority } =
+        req.body;
     const { workspaceId, projectId: paramProjectId } = req.params;
     const userId = req.user._id;
 
@@ -137,13 +206,12 @@ const createTask = asyncHandler(async (req, res) => {
     const pId = projectId || paramProjectId;
 
     const project = await Project.findOne({ _id: pId, workspace: workspaceId });
-    if (!project)
+    if (!project) {
         throw new ApiError(404, "Project not found in this workspace");
+    }
 
-    // Check membership
     await checkProjectMembership(userId, workspaceId, pId);
 
-    // Validate assigned user if provided
     if (normalizedAssignedTo !== undefined && normalizedAssignedTo !== null) {
         const isMember = await ProjectMember.findOne({
             user: normalizedAssignedTo,
@@ -156,6 +224,18 @@ const createTask = asyncHandler(async (req, res) => {
         }
     }
 
+    const parsedDueDate =
+        dueDate && !Number.isNaN(new Date(dueDate).getTime())
+            ? new Date(dueDate)
+            : null;
+
+    const allowedPriorities = ["low", "medium", "high", "urgent"];
+    const normalizedPriority = allowedPriorities.includes(
+        String(priority || "").toLowerCase(),
+    )
+        ? String(priority).toLowerCase()
+        : "medium";
+
     const task = await Tasks.create({
         title,
         description,
@@ -163,12 +243,19 @@ const createTask = asyncHandler(async (req, res) => {
         workspace: workspaceId,
         assignedTo: normalizedAssignedTo ?? null,
         assignedBy: userId,
-        attachments: req.uploadedFiles || [],
+        priority: normalizedPriority,
+        dueDate: parsedDueDate,
+        attachments: (req.uploadedFiles || []).map((file) => ({
+            ...file,
+            uploadedBy: req.user._id,
+            createdAt: new Date(),
+        })),
     });
 
     if (task.assignedTo) {
         await createNotification({
             user: task.assignedTo,
+            actor: req.user._id,
             workspace: task.workspace,
             project: task.project,
             task: task._id,
@@ -182,7 +269,6 @@ const createTask = asyncHandler(async (req, res) => {
         });
     }
 
-    // ✅ realtime emit
     const io = req.app.get("io");
     io?.to(`project:${workspaceId}:${pId}`).emit("task_created", task);
 
@@ -196,6 +282,8 @@ const createTask = asyncHandler(async (req, res) => {
         message: `Task "${task.title}" was created`,
         meta: {
             taskTitle: task.title,
+            priority: task.priority,
+            dueDate: task.dueDate,
         },
     });
 
@@ -212,11 +300,14 @@ const getTaskById = asyncHandler(async (req, res) => {
     await checkProjectMembership(userId, workspaceId, projectId);
 
     const task = await Tasks.findOne({
-         _id: taskId, project: projectId,
-         workspace: workspaceId,
-         })
-        .populate("assignedTo", "username email avatar")
-        .populate("assignedBy", "username email");
+        _id: taskId,
+        project: projectId,
+        workspace: workspaceId,
+    })
+        .populate("assignedTo", "username email avatar fullName")
+        .populate("assignedBy", "username email fullName")
+        .populate("attachments.uploadedBy", "username fullName avatar");
+
 
     if (!task) {
         throw new ApiError(404, "Task not found");
@@ -229,12 +320,12 @@ const getTaskById = asyncHandler(async (req, res) => {
 
 const updateTask = asyncHandler(async (req, res) => {
     const { workspaceId, projectId, taskId } = req.params;
-    const { title, description, status, assignedTo } = req.body;
+    const { title, description, status, assignedTo, dueDate, priority } =
+        req.body;
     const userId = req.user._id;
 
     const normalizedAssignedTo = normalizeAssignedTo(assignedTo);
 
-    // Check membership
     await checkProjectMembership(userId, workspaceId, projectId);
 
     const task = await Tasks.findOne({
@@ -247,13 +338,35 @@ const updateTask = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Task not found");
     }
 
-    // store old values before update
     const oldAssignedTo = task.assignedTo ? task.assignedTo.toString() : null;
     const oldStatus = task.status;
+    const oldDueDate = task.dueDate;
+    const oldPriority = task.priority;
 
     if (title) task.title = title;
     if (description) task.description = description;
     if (status) task.status = status;
+
+    if (priority !== undefined) {
+        const allowedPriorities = ["low", "medium", "high", "urgent"];
+        const normalizedPriority = String(priority || "").toLowerCase();
+
+        if (allowedPriorities.includes(normalizedPriority)) {
+            task.priority = normalizedPriority;
+        }
+    }
+
+    if (dueDate !== undefined) {
+        if (dueDate === null || dueDate === "") {
+            task.dueDate = null;
+        } else {
+            const parsedDueDate = new Date(dueDate);
+            if (Number.isNaN(parsedDueDate.getTime())) {
+                throw new ApiError(400, "Invalid due date");
+            }
+            task.dueDate = parsedDueDate;
+        }
+    }
 
     if (normalizedAssignedTo !== undefined) {
         if (normalizedAssignedTo === null) {
@@ -277,7 +390,13 @@ const updateTask = asyncHandler(async (req, res) => {
     }
 
     if (req.uploadedFiles && req.uploadedFiles.length > 0) {
-        task.attachments.push(...req.uploadedFiles);
+        const filesWithMeta = req.uploadedFiles.map((file) => ({
+            ...file,
+            uploadedBy: req.user._id,
+            createdAt: new Date(),
+        }));
+
+        task.attachments.push(...filesWithMeta);
     }
 
     await task.save();
@@ -285,12 +404,12 @@ const updateTask = asyncHandler(async (req, res) => {
     const io = req.app.get("io");
     io?.to(`project:${workspaceId}:${projectId}`).emit("task_updated", task);
 
-    // assignment notification + activity log
     const newAssignedTo = task.assignedTo ? task.assignedTo.toString() : null;
 
     if (newAssignedTo && newAssignedTo !== oldAssignedTo) {
         await createNotification({
             user: task.assignedTo,
+            actor: req.user._id,
             workspace: task.workspace,
             project: task.project,
             task: task._id,
@@ -318,7 +437,6 @@ const updateTask = asyncHandler(async (req, res) => {
         });
     }
 
-    // status change activity log
     if (status && oldStatus !== task.status) {
         await createActivityLog({
             workspace: task.workspace,
@@ -331,6 +449,31 @@ const updateTask = asyncHandler(async (req, res) => {
             meta: {
                 oldStatus,
                 newStatus: task.status,
+            },
+        });
+    }
+
+    const oldDueDateValue = oldDueDate
+        ? new Date(oldDueDate).toISOString()
+        : null;
+    const newDueDateValue = task.dueDate
+        ? new Date(task.dueDate).toISOString()
+        : null;
+
+    if (oldDueDateValue !== newDueDateValue || oldPriority !== task.priority) {
+        await createActivityLog({
+            workspace: task.workspace,
+            project: task.project,
+            task: task._id,
+            actor: req.user._id,
+            entityType: "task",
+            action: "task_schedule_updated",
+            message: `Task "${task.title}" schedule details were updated`,
+            meta: {
+                oldDueDate: oldDueDateValue,
+                newDueDate: newDueDateValue,
+                oldPriority,
+                newPriority: task.priority,
             },
         });
     }
@@ -442,43 +585,116 @@ const createSubTask = asyncHandler(async (req, res) => {
         .json(new ApiResponse(201, subtask, "Subtask created successfully"));
 });
 
+const getSubTasks = asyncHandler(async (req, res) => {
+    const { workspaceId, projectId, taskId } = req.params;
+    const userId = req.user._id;
+
+    await checkProjectMembership(userId, workspaceId, projectId);
+
+    const task = await Tasks.findOne({
+        _id: taskId,
+        project: projectId,
+        workspace: workspaceId,
+    });
+
+    if (!task) {
+        throw new ApiError(404, "Task not found");
+    }
+
+    const subtasks = await SubTask.find({
+        task: taskId,
+        workspace: workspaceId,
+    })
+        .sort({ createdAt: -1 })
+        .lean();
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, subtasks, "Subtasks fetched successfully"));
+});
+
 const updateSubTask = asyncHandler(async (req, res) => {
     const { workspaceId, projectId, taskId, subtaskId } = req.params;
     const { title, isCompleted } = req.body;
     const userId = req.user._id;
 
-    // Check membership
     await checkProjectMembership(userId, workspaceId, projectId);
 
-    const task = await Tasks.findOne({ _id: taskId, project: projectId, workspace: workspaceId });
+    const task = await Tasks.findOne({
+        _id: taskId,
+        project: projectId,
+        workspace: workspaceId,
+    });
+
     if (!task) {
         throw new ApiError(404, "Task not found");
     }
 
-    const subtask = await SubTask.findOne({ _id: subtaskId, task: taskId, workspace: workspaceId });
+    const subtask = await SubTask.findOne({
+        _id: subtaskId,
+        task: taskId,
+        workspace: workspaceId,
+    });
+
     if (!subtask) {
         throw new ApiError(404, "Subtask not found");
     }
 
-    if (title) subtask.title = title;
-    if (isCompleted !== undefined) subtask.isCompleted = isCompleted;
+    const oldTitle = subtask.title;
+    const oldIsCompleted = subtask.isCompleted;
+
+    if (title !== undefined && title.trim() !== "") {
+        subtask.title = title.trim();
+    }
+
+    if (isCompleted !== undefined) {
+        subtask.isCompleted = isCompleted;
+    }
 
     await subtask.save();
 
-    await createActivityLog({
-        workspace: workspaceId,
-        project: projectId,
-        task: taskId,
-        actor: req.user._id,
-        entityType: "task",
-        action: "subtask_updated",
-        message: `Subtask "${subtask.title}" was updated`,
-        meta: {
-            subtaskId: subtask._id,
-            subtaskTitle: subtask.title,
-            isCompleted: subtask.isCompleted,
-        },
-    });
+    const titleChanged =
+        title !== undefined &&
+        title.trim() !== "" &&
+        oldTitle !== subtask.title;
+    const completionChanged =
+        isCompleted !== undefined && oldIsCompleted !== subtask.isCompleted;
+
+    if (completionChanged) {
+        await createActivityLog({
+            workspace: workspaceId,
+            project: projectId,
+            task: taskId,
+            actor: userId,
+            entityType: "task",
+            action: subtask.isCompleted
+                ? "subtask_completed"
+                : "subtask_reopened",
+            message: subtask.isCompleted
+                ? `completed subtask "${subtask.title}"`
+                : `reopened subtask "${subtask.title}"`,
+            meta: {
+                subtaskId: subtask._id,
+                subtaskTitle: subtask.title,
+                isCompleted: subtask.isCompleted,
+            },
+        });
+    } else if (titleChanged) {
+        await createActivityLog({
+            workspace: workspaceId,
+            project: projectId,
+            task: taskId,
+            actor: userId,
+            entityType: "task",
+            action: "subtask_renamed",
+            message: `renamed subtask "${oldTitle}" to "${subtask.title}"`,
+            meta: {
+                subtaskId: subtask._id,
+                oldTitle,
+                subtaskTitle: subtask.title,
+            },
+        });
+    }
 
     return res
         .status(200)
@@ -547,10 +763,19 @@ const removeAttachment = asyncHandler(async (req, res) => {
         attachmentId: attachment._id,
         url: attachment.url,
         public_id: attachment.public_id,
+        resource_type: attachment.resource_type,
     };
 
-    // Delete from Cloudinary
-    await deleteFromCloudinary(attachment.public_id);
+    const fallbackResourceType =
+        attachment.resource_type ||
+        (attachment.mimetype?.startsWith("image/")
+            ? "image"
+            : attachment.mimetype?.startsWith("video/")
+              ? "video"
+              : "raw");
+
+    //Delete from Cloudinary
+    await deleteFromCloudinary(attachment.public_id, fallbackResourceType);
 
     // Remove from task
     task.attachments.id(attachmentId).deleteOne();
@@ -626,11 +851,13 @@ const getKanbanBoard = asyncHandler(async (req, res) => {
 
 export {
     getTasks,
+    getWorkspaceTasks,
     createTask,
     getTaskById,
     updateTask,
     deleteTask,
     createSubTask,
+    getSubTasks,
     updateSubTask,
     deleteSubTask,
     removeAttachment,

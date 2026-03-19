@@ -10,12 +10,30 @@ export const upload = multer({
         fileSize: 5 * 1024 * 1024,
     },
     fileFilter: function (req, file, cb) {
-        const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+        const allowedTypes = [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "application/pdf",
+            "application/msword",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            "application/vnd.ms-excel",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "application/vnd.ms-powerpoint",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            "text/plain",
+            "application/zip",
+            "application/x-zip-compressed",
+        ];
 
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error("Only JPG, PNG, and PDF allowed"));
+            cb(
+                new Error(
+                    "Only images, PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, TXT, and ZIP files are allowed",
+                ),
+            );
         }
     },
 });
@@ -60,12 +78,16 @@ export const uploadToCloudinary = async (req, res, next) => {
         req.uploadedFiles = results.map((result, index) => ({
             public_id: result.public_id,
             url: result.secure_url,
+            resource_type: result.resource_type,
             mimetype: req.files[index].mimetype,
             size: result.bytes,
+            originalname: req.files[index].originalname,
         }));
+
 
         return next();
     } catch (error) {
+        console.error("Cloudinary upload middleware error:", error);
         return next(error);
     }
 };

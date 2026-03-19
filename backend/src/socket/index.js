@@ -68,7 +68,9 @@ const getUserFromSocket = async (socket) => {
     if (!authToken) return null;
 
     const decoded = jwt.verify(authToken, process.env.ACCESS_TOKEN_SECRET);
-    const user = await User.findById(decoded._id).select("_id username email");
+    const user = await User.findById(decoded._id).select(
+        "_id username email fullname name avatar",
+    );
     return user || null;
 };
 
@@ -121,7 +123,6 @@ export const initSocket = (httpServer) => {
             socket.user?.username,
         );
 
-        // personal room for realtime notifications
         socket.join(socket.user._id.toString());
         console.log("🔔 Joined personal room:", socket.user._id.toString());
 
@@ -256,10 +257,13 @@ export const initSocket = (httpServer) => {
                     text: cleanText,
                 });
 
-                const populated = await Message.findById(msg._id).populate(
-                    "sender",
-                    "username email",
-                );
+                await Conversation.findByIdAndUpdate(convo._id, {
+                    $set: { updatedAt: new Date() },
+                });
+
+                const populated = await Message.findById(msg._id)
+                    .populate("sender", "username email avatar fullname name")
+                    .lean();
 
                 ioInstance
                     .to(`conversation:${convo._id}`)
@@ -268,6 +272,91 @@ export const initSocket = (httpServer) => {
                 socket.emit("error_event", {
                     message: e.message || "Send failed",
                 });
+            }
+        });
+
+        socket.on("typing_start", async ({ conversationId }) => {
+            try {
+                if (!mongoose.isValidObjectId(conversationId)) {
+                    return;
+                }
+
+                const convo = await Conversation.findById(conversationId);
+                if (!convo) return;
+
+                if (convo.type === "project") {
+                    await ensureProjectAccess({
+                        userId: socket.user._id,
+                        workspaceId: convo.workspace,
+                        projectId: convo.project,
+                    });
+                } else if (convo.type === "workspace") {
+                    await ensureWorkspaceAccess({
+                        userId: socket.user._id,
+                        workspaceId: convo.workspace,
+                    });
+                } else if (convo.type === "task") {
+                    await ensureTaskAccess({
+                        userId: socket.user._id,
+                        workspaceId: convo.workspace,
+                        projectId: convo.project,
+                        taskId: convo.task,
+                    });
+                } else {
+                    return;
+                }
+
+                socket.to(`conversation:${convo._id}`).emit("typing_started", {
+                    conversationId: convo._id,
+                    user: {
+                        _id: socket.user._id,
+                        username: socket.user.username,
+                        fullname: socket.user.fullname,
+                        name: socket.user.name,
+                    },
+                });
+            } catch (e) {
+                console.log("typing_start error:", e.message);
+            }
+        });
+
+        socket.on("typing_stop", async ({ conversationId }) => {
+            try {
+                if (!mongoose.isValidObjectId(conversationId)) {
+                    return;
+                }
+
+                const convo = await Conversation.findById(conversationId);
+                if (!convo) return;
+
+                if (convo.type === "project") {
+                    await ensureProjectAccess({
+                        userId: socket.user._id,
+                        workspaceId: convo.workspace,
+                        projectId: convo.project,
+                    });
+                } else if (convo.type === "workspace") {
+                    await ensureWorkspaceAccess({
+                        userId: socket.user._id,
+                        workspaceId: convo.workspace,
+                    });
+                } else if (convo.type === "task") {
+                    await ensureTaskAccess({
+                        userId: socket.user._id,
+                        workspaceId: convo.workspace,
+                        projectId: convo.project,
+                        taskId: convo.task,
+                    });
+                } else {
+                    return;
+                }
+
+                socket.to(`conversation:${convo._id}`).emit("typing_stopped", {
+                    conversationId: convo._id,
+                    userId: socket.user._id,
+                });
+            } catch (e) {
+                console.log("typing_stop error:", e.message);
             }
         });
 

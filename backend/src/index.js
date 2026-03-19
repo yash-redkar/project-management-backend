@@ -1,13 +1,11 @@
 import dotenv from "dotenv";
+dotenv.config({ path: "./.env" });
+
 import http from "http";
 
-import app from "./app.js";
-import connectDB from "./db/db_connection.js";
-import { initSocket } from "./socket/index.js";
-
-dotenv.config({
-    path: "./.env",
-});
+const { default: app } = await import("./app.js");
+const { default: connectDB } = await import("./db/db_connection.js");
+const { initSocket } = await import("./socket/index.js");
 
 const PORT = process.env.PORT || 3000;
 

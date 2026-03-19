@@ -80,6 +80,7 @@ export const inviteToWorkspace = asyncHandler(async (req, res) => {
 
     await createNotification({
         user: invitedUser._id,
+        actor: req.user._id,
         workspace: workspaceId,
         type: "workspace_invite",
         message: `You were invited to workspace "${workspace.name}"`,

@@ -1,5 +1,5 @@
 import { body } from "express-validator";
-import { AvailableTaskStatus, AvailableUserRole } from "../utils/constants.js";
+import { AvailableProjectStatus, AvailableTaskStatus, AvailableUserRole } from "../utils/constants.js";
 
 const passwordValidator = (
     fieldName = "password",
@@ -68,6 +68,17 @@ const userLoginValidator = () => {
     ];
 };
 
+const userUpdateAccountValidator = () => {
+    return [
+        body("fullName")
+            .trim()
+            .notEmpty()
+            .withMessage("Full name is required")
+            .isLength({ min: 3, max: 50 })
+            .withMessage("Full name must be between 3 and 50 characters long"),
+    ];
+};
+
 const userChangedCurrentPasswordValidator = () => {
     return [
         body("oldPassword")
@@ -103,12 +114,61 @@ const createProjectValidator = () => {
             .withMessage(
                 "Project name must be between 3 and 100 characters long",
             ),
+
         body("description")
             .optional()
             .trim()
             .isLength({ max: 500 })
             .withMessage(
                 "Project description must be less than 500 characters long",
+            ),
+
+        body("status")
+            .optional()
+            .isIn(AvailableProjectStatus)
+            .withMessage(
+                `Project status must be one of the following: ${AvailableProjectStatus.join(", ")}`,
+            ),
+    ];
+};
+
+const updateProjectValidator = () => {
+    return [
+        body().custom((value, { req }) => {
+            const hasName = req.body?.name !== undefined;
+            const hasDescription = req.body?.description !== undefined;
+            const hasStatus = req.body?.status !== undefined;
+
+            if (!hasName && !hasDescription && !hasStatus) {
+                throw new Error("Provide at least one field to update");
+            }
+
+            return true;
+        }),
+
+        body("name")
+            .optional()
+            .trim()
+            .notEmpty()
+            .withMessage("Project name cannot be empty")
+            .isLength({ min: 3, max: 100 })
+            .withMessage(
+                "Project name must be between 3 and 100 characters long",
+            ),
+
+        body("description")
+            .optional()
+            .trim()
+            .isLength({ max: 500 })
+            .withMessage(
+                "Project description must be less than 500 characters long",
+            ),
+
+        body("status")
+            .optional()
+            .isIn(AvailableProjectStatus)
+            .withMessage(
+                `Project status must be one of the following: ${AvailableProjectStatus.join(", ")}`,
             ),
     ];
 };
@@ -140,11 +200,13 @@ const createTaskValidator = () => {
             .withMessage("Title is required")
             .isLength({ min: 3, max: 200 })
             .withMessage("Title must be between 3 and 200 characters long"),
+
         body("description")
             .optional()
             .trim()
             .isLength({ max: 2000 })
             .withMessage("Description must be less than 2000 characters long"),
+
         body("assignedTo")
             .optional({ nullable: true })
             .custom((value) => {
@@ -158,11 +220,51 @@ const createTaskValidator = () => {
                 return /^[0-9a-fA-F]{24}$/.test(String(value));
             })
             .withMessage("Assigned user must be a valid user id"),
+
+        body("priority")
+            .optional()
+            .isIn(["low", "medium", "high", "urgent"])
+            .withMessage("Priority must be one of: low, medium, high, urgent"),
+
+        body("dueDate")
+            .optional({ nullable: true, checkFalsy: true })
+            .isISO8601()
+            .withMessage("Due date must be a valid date"),
     ];
 };
 
 const updateTaskValidator = () => {
     return [
+        body().custom((value, { req }) => {
+            const hasTitle = req.body?.title !== undefined;
+            const hasDescription = req.body?.description !== undefined;
+            const hasStatus = req.body?.status !== undefined;
+            const hasAssignedTo = req.body?.assignedTo !== undefined;
+            const hasPriority = req.body?.priority !== undefined;
+            const hasDueDate = req.body?.dueDate !== undefined;
+            const hasFiles = Array.isArray(req.files) && req.files.length > 0;
+            const hasUploadedFiles =
+                Array.isArray(req.uploadedFiles) &&
+                req.uploadedFiles.length > 0;
+
+            if (
+                !hasTitle &&
+                !hasDescription &&
+                !hasStatus &&
+                !hasAssignedTo &&
+                !hasPriority &&
+                !hasDueDate &&
+                !hasFiles &&
+                !hasUploadedFiles
+            ) {
+                throw new Error(
+                    "Provide at least one field to update or upload at least one attachment",
+                );
+            }
+
+            return true;
+        }),
+
         body("title")
             .optional()
             .trim()
@@ -170,17 +272,20 @@ const updateTaskValidator = () => {
             .withMessage("Title cannot be empty")
             .isLength({ min: 3, max: 200 })
             .withMessage("Title must be between 3 and 200 characters long"),
+
         body("description")
             .optional()
             .trim()
             .isLength({ max: 2000 })
             .withMessage("Description must be less than 2000 characters long"),
+
         body("status")
             .optional()
             .isIn(AvailableTaskStatus)
             .withMessage(
                 `Status must be one of the following: ${AvailableTaskStatus.join(", ")}`,
             ),
+
         body("assignedTo")
             .optional({ nullable: true })
             .custom((value) => {
@@ -194,6 +299,22 @@ const updateTaskValidator = () => {
                 return /^[0-9a-fA-F]{24}$/.test(String(value));
             })
             .withMessage("Assigned user must be a valid user id"),
+
+        body("priority")
+            .optional()
+            .isIn(["low", "medium", "high", "urgent"])
+            .withMessage("Priority must be one of: low, medium, high, urgent"),
+
+        body("dueDate")
+            .optional({ nullable: true, checkFalsy: true })
+            .custom((value) => {
+                if (value === null || value === undefined || value === "") {
+                    return true;
+                }
+
+                return !Number.isNaN(new Date(value).getTime());
+            })
+            .withMessage("Due date must be a valid date"),
     ];
 };
 
@@ -273,10 +394,12 @@ const updateTaskCommentValidator = () => {
 export {
     userRegisterValidator,
     userLoginValidator,
+    userUpdateAccountValidator,
     userChangedCurrentPasswordValidator,
     userForgotPasswordValidator,
     userResetForgotPasswordValidator,
     createProjectValidator,
+    updateProjectValidator,
     addMemberToProjectValidator,
     createTaskValidator,
     updateTaskValidator,

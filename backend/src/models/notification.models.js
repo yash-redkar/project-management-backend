@@ -8,6 +8,12 @@ const notificationSchema = new mongoose.Schema(
             required: true,
             index: true,
         },
+        actor: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+            index: true,
+        },
         workspace: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Workspace",
@@ -45,9 +51,10 @@ const notificationSchema = new mongoose.Schema(
             default: {},
         },
     },
-    { timestamps: true,
-        versionKey: false
-     },
+    {
+        timestamps: true,
+        versionKey: false,
+    },
 );
 
 notificationSchema.index({ user: 1, isRead: 1, createdAt: -1 });

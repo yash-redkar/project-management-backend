@@ -37,33 +37,54 @@ const taskSchema = new Schema(
             enum: AvailableTaskStatus,
             default: TaskStatusEnum.TODO,
         },
+        priority: {
+            type: String,
+            enum: ["low", "medium", "high", "urgent"],
+            default: "medium",
+        },
+        dueDate: {
+            type: Date,
+            default: null,
+            index: true,
+        },
         attachments: {
             type: [
                 {
                     public_id: String,
                     url: String,
+                    resource_type: String,
                     mimetype: String,
                     size: Number,
+                    originalname: String,
+                    uploadedBy: {
+                        type: Schema.Types.ObjectId,
+                        ref: "User",
+                    },
+                    createdAt: {
+                        type: Date,
+                        default: Date.now,
+                    },
                 },
             ],
             default: [],
         },
     },
-    { timestamps: true,
-        versionKey: false
-     },
+    { timestamps: true, versionKey: false },
 );
 
 // list tasks in project
-taskSchema.index({ workspace: 1, project: 1, createdAt: -1 }); 
+taskSchema.index({ workspace: 1, project: 1, createdAt: -1 });
 
- // "my tasks"
+// "my tasks"
 taskSchema.index({ workspace: 1, assignedTo: 1, status: 1, createdAt: -1 });
 
- // kanban columns
+// kanban columns
 taskSchema.index({ project: 1, status: 1, createdAt: -1 });
 
 taskSchema.index({ workspace: 1, status: 1, createdAt: -1 });
+
+taskSchema.index({ workspace: 1, dueDate: 1, status: 1 });
+taskSchema.index({ project: 1, dueDate: 1, status: 1 });
 
 taskSchema.index({ title: "text", description: "text" });
 
