@@ -7,7 +7,7 @@ import {
     logoutUser,
     refreshAccessToken,
     registerUser,
-    resendEmailVerfication,
+    resendEmailVerification,
     resetForgotPassword,
     verifyEmail,
     updateAccountDetails,
@@ -58,6 +58,6 @@ router
     );
 router
     .route("/resend-email-verification")
-    .post(verifyJWT, resendEmailVerfication);
+    .post(verifyJWT, resendEmailVerification);
 
 export default router;

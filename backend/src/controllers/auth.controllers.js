@@ -37,7 +37,7 @@ const refreshCookieOptions = {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { email, username, password, role } = req.body;
+    const { email, username, password } = req.body;
 
     const existingUser = await User.findOne({
         $or: [{ username: username }, { email: email }],
@@ -190,7 +190,7 @@ const verifyEmail = asyncHandler(async (req, res) => {
     return res.redirect(`${process.env.FRONTEND_URL}/settings?verified=true`);
 });
 
-const resendEmailVerfication = asyncHandler(async (req, res) => {
+const resendEmailVerification = asyncHandler(async (req, res) => {
     const user = await User.findById(req.user?._id);
 
     if (!user) {
@@ -398,7 +398,7 @@ export {
     logoutUser,
     getCurrentUser,
     verifyEmail,
-    resendEmailVerfication,
+    resendEmailVerification,
     refreshAccessToken,
     forgotPasswordRequest,
     resetForgotPassword,

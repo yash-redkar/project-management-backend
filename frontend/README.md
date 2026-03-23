@@ -1,371 +1,104 @@
-# 🚀 TaskForge — SaaS Project Management Platform
+# TaskForge Frontend 🎨
 
-TaskForge is a modern SaaS project management platform designed to help teams collaborate, organize projects, and manage work efficiently.
+Frontend application for **TaskForge**, a full-stack SaaS project management platform.
 
-The platform provides a workspace-based collaboration environment where teams can create projects, manage tasks, track progress, communicate in real time, and monitor activity across their organization.
+This frontend handles the user interface for authentication, dashboard views, workspaces, projects, tasks, chat, notifications, activity tracking, search, and calendar-based task planning.
 
-TaskForge is built using a scalable full-stack architecture with modern technologies such as Node.js, Express, MongoDB, Next.js, and WebSockets, providing a fast and production-ready collaboration system.
+---
 
-🧠 Key Features
+## Tech Stack
 
-TaskForge provides a complete collaboration environment for teams.
+- Next.js 16
+- TypeScript
+- Tailwind CSS
+- Axios
+- Framer Motion
+- Recharts
+- React Hot Toast
+- Socket.IO Client
+- @hello-pangea/dnd
 
-Core Platform Features
+---
 
-🏢 Multi-Workspace SaaS Architecture
+## Frontend Responsibilities
 
-📊 Workspace Dashboard
+- Authentication UI flow
+- Protected dashboard and routing
+- Workspace and project navigation
+- Task creation and task details UI
+- Subtasks, comments, and attachments UI
+- Kanban board interface
+- Notifications and activity pages
+- Workspace chat and project chat UI
+- Search / command palette
+- Calendar task view
+- Settings page UI
 
-📁 Project Management
+---
 
-📋 Task Management System
+## Folder Structure
 
-🗂 Kanban Drag & Drop Board
-
-📅 Calendar Task Scheduling
-
-👥 Team & Role Management
-
-🔔 Real-Time Notifications
-
-📜 Activity Timeline & Logs
-
-💬 Workspace Chat System
-
-📎 File Attachments
-
-🔎 Global Search System
-
-💳 Billing & Usage Overview
-
-🏗 System Architecture
-
-The platform follows a hierarchical collaboration model.
-
-User
- ↓
-Workspace
- ↓
-Project
- ↓
-Tasks
- ↓
-Subtasks
- ↓
-Comments
-
-Additional system modules:
-
-Notifications
-
-Activity Logs
-
-Chat System
-
-Global Search
-
-Billing System
-
-📊 Dashboard
-
-The dashboard acts as the central productivity hub of the platform.
-
-Features
-
-Workspace overview
-
-Project statistics
-
-Task progress tracking
-
-Recent activity feed
-
-Quick navigation shortcuts
-
-Productivity insights
-
-📁 Project Management
-
-Projects organize collaborative work inside workspaces.
-
-Features
-
-Create projects
-
-Update project details
-
-Delete projects
-
-Assign project members
-
-Track project progress
-
-📋 Task Management
-
-Tasks represent units of work within projects.
-
-Features
-
-Create tasks
-
-Assign tasks
-
-Update task details
-
-Delete tasks
-
-Attach files
-
-Track status
-
-Task Workflow
-TODO → IN_PROGRESS → DONE
-
-Each task includes:
-
-Assignee
-
-Creator
-
-Attachments
-
-Status
-
-Timestamps
-
-🗂 Kanban Board
-
-The Kanban board allows teams to manage tasks visually.
-
-Features
-
-Drag & drop tasks
-
-Status based workflow
-
-Visual progress tracking
-
-Quick task updates
-
-📅 Calendar Task Scheduling
-
-TaskForge includes a calendar view for deadline management.
-
-Features
-
-Monthly calendar layout
-
-View tasks by due date
-
-Navigate between months
-
-Click task to open details
-
-Deadline visualization
-
-👥 Team Management
-
-Workspace teams support role-based access control.
-
-Roles
-Role	Description
-Owner	Full workspace control
-Admin	Manage members & projects
-Member	Work on projects
-Viewer	Read-only access
-Features
-
-Invite members
-
-Change roles
-
-Remove members
-
-Pending invite management
-
-🔔 Notification System
-
-A full notification system keeps users informed about important events.
-
-Triggers
-
-Task assignments
-
-Comments
-
-Mentions
-
-System events
-
-Features
-
-Read / unread notifications
-
-Real-time delivery
-
-Notification metadata
-
-📜 Activity Logging
-
-All major actions are recorded in an activity timeline.
-
-Examples:
-
-Workspace created
-
-Project created
-
-Task updated
-
-Member role changed
-
-Comment added
-
-This provides a complete audit trail for collaboration.
-
-💬 Real-Time Communication
-
-The platform supports real-time collaboration using WebSockets.
-
-Features
-
-Workspace chat
-
-Project discussions
-
-Instant updates
-
-Live collaboration
-
-🔎 Global Search
-
-Global search allows users to quickly find information across the platform.
-
-Entity	Search Fields
-Tasks	title, description
-Projects	name, description
-Members	username, email
-💳 Billing System (v1)
-
-The billing system currently supports usage tracking and plan overview.
-
-Features
-
-Workspace plan overview
-
-Member usage tracking
-
-Usage limits
-
-Upgrade plan placeholder
-
-Payment method UI
-
-Future versions will include full payment integration.
-
-🛠 Tech Stack
-Backend
-
-Node.js
-
-Express.js
-
-MongoDB
-
-Mongoose
-
-Socket.IO
-
-JWT Authentication
-
-Multer (File Upload)
-
-Frontend
-
-Next.js 14
-
-TypeScript
-
-TailwindCSS
-
-React Hooks
-
-Axios
-
-React Hot Toast
-
-📂 Project Structure
-taskforge
+```bash
+frontend/
 │
-├── backend
-│   ├── controllers
-│   ├── routes
-│   ├── models
-│   ├── middlewares
-│   ├── utils
-│   └── server.js
+├── src/
+│   ├── app/
+│   ├── components/
+│   ├── context/
+│   ├── lib/
+│   ├── services/
+│   ├── types/
+│   └── hooks/
 │
-├── frontend
-│   ├── app
-│   ├── components
-│   ├── services
-│   ├── lib
-│   └── styles
-│
+├── public/
+├── package.json
 └── README.md
+```
 
-🔐 Security Features
+## Environment Setup
 
-Security protections implemented:
+Create a .env.local file in the frontend folder based on .env.example.
 
-JWT authentication
+### Example
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
 
-Role-based authorization
+## Notes
 
-Rate limiting
+- The frontend uses a shared Axios client for API communication.
+- Authentication requests use the backend API with credentials enabled.
+- Realtime features are powered through Socket.IO client integration.
+- Drag-and-drop task workflow is implemented using @hello-pangea/dnd.
 
-MongoDB query sanitization
+## Current Status
 
-Secure file uploads
+### Completed
 
-HTTP header protection
+- Auth UI
+- Dashboard UI
+- Workspace flow
+- Project flow
+- Task flow
+- Kanban board
+- Search / command palette
+- Notifications page
+- Activity page
+- Workspace chat
+- Project chat
+- Calendar page core UI
 
-📸 Screenshots 
+### In Progress
 
-You can add screenshots of:
+- Settings page polish
+- Responsiveness improvements
+- UI consistency cleanup
 
-Dashboard
+### Planned
 
-Kanban board
+- AI Assistant UI
+- Billing page
+- Theme switching
 
-Task page
 
-Calendar view
+## 👨‍💻Author
 
-Workspace settings
-
-Example:
-
-![Dashboard](./screenshots/dashboard.png)
-🚀 Future Improvements
-
-Planned enhancements include:
-
-Advanced analytics dashboard
-
-AI productivity assistant
-
-Mobile responsive improvements
-
-Advanced reporting system
-
-Payment gateway integration
-
-Workspace templates
-
-👨‍💻 Author
-
-Yash Redkar
-
-Full Stack Developer
-Node.js | Express | MongoDB | Next.js | SaaS Architecture
+**Yash Redkar**

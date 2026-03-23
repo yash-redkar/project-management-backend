@@ -77,14 +77,6 @@ router
     );
 
 // SUBTASKS  (/tasks/:taskId/subtasks)
-router
-    .route("/:taskId/subtasks")
-    .post(
-        validateProjectPermission([UserRolesEnum.ADMIN, UserRolesEnum.MEMBER]),
-        createSubTaskValidator(),
-        validate,
-        createSubTask,
-    );
 
 router
     .route("/:taskId/subtasks")

@@ -1,352 +1,132 @@
-# 🚀 TaskForge Backend
+# TaskForge Backend ⚙️
 
-A production-grade backend system designed to support collaborative team workflows with scalable architecture, real-time communication, and role-based access control.
+Backend API for **TaskForge**, a full-stack SaaS project management platform.
 
-This system provides a scalable backend foundation for team collaboration with:
+This backend powers authentication, workspaces, projects, tasks, subtasks, comments, attachments, invitations, notifications, activity logs, search, and realtime collaboration features.
 
-Workspaces
+---
 
-Projects
+## Tech Stack
 
-Task Management
-
-Real-Time Communication
-
-Notifications
-
-Global Search
-
-Built using modern backend architecture principles including modular design, role-based access control, real-time events, and scalable API structure.
-
-# 🧠 Key Highlights
-
-✨ Features implemented in this backend system:
-
-🏢 Multi-Workspace SaaS Architecture
-
-🔐 Role-Based Access Control
-
-⚡ Real-Time Communication (Socket.IO)
-
-📋 Task Workflow Management
-
-🔎 Global Search Engine
-
-📜 Activity Logging & Audit Trail
-
-🔔 Real-Time Notification System
-
-🛡️ Secure JWT Authentication
-
-📎 File Attachments Support
-
-🧩 Modular & Scalable Architecture
-
-# 🏗️ System Architecture
-
-The platform follows a hierarchical collaboration structure:
-
-```
-User
- ↓
-Workspace
- ↓
-Project
- ↓
-Tasks
- ↓
-Subtasks
- ↓
-Comments
-```
-
-Additional backend modules:
-
-🔔 Notifications
-
-📜 Activity Logs
-
-💬 Chat System
-
-🔎 Global Search
-
-🔐 Authentication System
-
-Secure authentication system built using JWT tokens.
-
-# Features
-
-👤 User Registration
-
-📧 Email Verification
-
-🔑 Secure Login
-
-🔁 Access Token + Refresh Token
-
-🔒 Password Hashing (bcrypt)
-
-🔄 Forgot / Reset Password
-
-🛡️ Role-Based Authorization
-
-🏢 Workspace Management
-
-Workspaces act as the top-level collaboration environment.
-
-Features
-
-- Create workspace
-- Manage workspace members
-- Assign workspace roles
-- Leave workspace
-- Transfer workspace    ownership
-- Activity tracking
-
-Workspace Roles
-| Role | Description |
-|-----|-------------|
-| 👑 Owner | Full control |
-| ⚙️ Admin | Manage members & projects |
-| 👤 Member | Work on projects |
-| 👀 Viewer | Read-only access |
-📁 Project Management
-
-Projects organize collaborative work inside workspaces.
-
-Features
-
-- Create projects
-- Update project details
-- Delete projects
-- Manage project members
-- Project role permissions
-
-Project Roles
-| Role | Access |
-|-----|--------|
-| 🛠 Admin | Manage project |
-| 👤 Member | Work on tasks |
-
-Tasks represent units of work inside projects.
-
-Features
-
--Create tasks
--Update tasks
--Delete tasks
--Assign tasks
--Track task status
--File attachments
--Task Status Workflow
--TODO → IN_PROGRESS → DONE
-
-Each task includes:
-
--Assignee
--Creator
--Attachments
--Status
--Timestamps
-
-🧩 Subtask Management
-
-Tasks can contain subtasks for smaller work units.
-
-Features:
-
--Create subtasks
--Update subtasks
--Mark subtasks completed
-
-Delete subtasks
-
-💬 Task Comments
-
-Tasks support discussion threads.
-
-Features
-
--Add comment
--Edit comment
--Delete comment
--Mention users
--Comment history
-
-Example:
-
-@member4 please review this API
-🔔 Notification System
-
-A full notification system is implemented.
-
-Triggered By
-
-Task assignments
-
-Task comments
-
-User mentions
-
-System events
-
-Features
-
--User-specific notifications
--Read / unread tracking
--Real-time delivery
--Metadata support
-
-📜 Activity Logging
-
-All major actions are recorded for audit tracking.
-
-Examples:
-
-Workspace created
-
-Project created
-
-Task updates
-
-Member changes
-
-Comment actions
-
-⚡ Real-Time Communication
-
-Powered by Socket.IO.
-
-Supports:
-
-Workspace chat
-
-Project chat
-
-Task discussions
-
-Instant updates
-
-Users join rooms based on permissions.
-
-🔎 Global Search
-
-Global search across multiple entities.
-
-| Entity   | Search Fields |
-|---------|--------------|
-| Tasks   | title, description |
-| Projects | name, description |
-| Members | username, email |
-
-MongoDB text indexes power the search system.
-
-# 🛠 Tech Stack
-
-The backend follows a modular MVC architecture designed for scalability and maintainability.
-
-### Backend
 - Node.js
 - Express.js
 - MongoDB
 - Mongoose
-
-### Real-Time
+- JWT Authentication
 - Socket.IO
-
-### Authentication
-- JWT Access Tokens
-- JWT Refresh Tokens
-
-### File Upload
+- Cloudinary
 - Multer
+- Nodemailer
+- Mailgen
 
-# 🌐 API Base Path
+---
 
-All endpoints are prefixed with:
+## Backend Responsibilities
 
-/api/v1
+- Authentication and authorization
+- Refresh token rotation
+- Email verification and password recovery
+- Workspace management
+- Project management
+- Task and subtask operations
+- Task comments and attachments
+- Workspace and project invitations
+- Notifications
+- Activity logs
+- Global search
+- Realtime chat and events
 
-Example modules:
+---
 
-/auth
-/workspaces
-/projects
-/tasks
-/chat
-/notifications
-/activity
-/search
+## Security Features
 
-🔐 Security Features
+- Helmet
+- Rate limiting
+- Cookie parsing
+- CORS configuration
+- Mongo sanitization
+- HPP protection
+- JWT verification middleware
+- Role-based permission checks
 
-Security protections include:
+---
 
-JWT authentication
+## Folder Structure
 
-Role-based permissions
+```bash
+backend/
+│
+├── src/
+│   ├── controllers/
+│   ├── middlewares/
+│   ├── models/
+│   ├── routes/
+│   ├── utils/
+│   ├── validators/
+│   └── index.js
+│
+├── package.json
+├── .env.example
+└── README.md
+```
 
-Input validation
+---
 
-MongoDB sanitization
+## Environment Setup
 
-HTTP header protection
+Create a .env file in the backend folder based on .env.example.
 
-Rate limiting
+## Core Modules
 
-HPP protection
+- Auth
+- Workspaces
+- Workspace Members
+- Workspace Invitations
+- Projects
+- Project Members
+- Project Invitations
+- Tasks
+- Subtasks
+- Task Comments
+- Attachments
+- Notifications
+- Activity Logs
+- Search
+- Chat
 
-Secure file uploads
+## API Notes
+- All main routes are versioned under `/api/v1`
+- JWT-based protected routes use authorization middleware
+- File uploads support task attachments through Multer + Cloudinary
+- Realtime updates are emitted through Socket.IO events
+- Activity logs and notifications are created for major collaboration actions
 
-🔮 Future Plans
+## Current Status
 
-Frontend application will include:
+### Completed
+- Auth system
+- Workspace module
+- Project module
+- Task module
+- Subtasks
+- Comments
+- Attachments
+- Notifications
+- Activity logs
+- Search
+- Chat
+- Invitation flows
 
-📊 Dashboard
+### In Progress
+- Refactoring and cleanup
+- Deployment readiness
+- Testing support
 
-🏢 Workspace management UI
+### Planned
+- Billing support
+- AI Assistant integration
+- Additional production improvements
 
-📁 Project overview pages
+## Author
 
-🗂️ Kanban task board
-
-📄 Task detail pages
-
-🔔 Notification center
-
-💬 Real-time chat
-
-🔎 Global search interface
-
-📌 Project Status
-
-✅ Backend development is mostly complete.
-
-Implemented systems:
-
-Authentication
-
-Workspace collaboration
-
-Project management
-
-Task workflow
-
-Comments
-
-Notifications
-
-Activity logs
-
-Global search
-
-Real-time communication
-
-The backend is now ready for frontend integration.
-
-# 👨‍💻 Author
-
-**Yash**
-
-Backend Developer  
-Node.js | Express | MongoDB | Real-Time Systems
+**Yash Redkar**
