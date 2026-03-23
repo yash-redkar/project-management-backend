@@ -1,6 +1,6 @@
-# TaskForge 🚀
+# TeamForge 🚀
 
-TaskForge is a full-stack SaaS project management platform built for team collaboration, workspace organization, project tracking, task assignment, realtime communication, and productivity workflows.
+TeamForge is a full-stack SaaS project management platform built for team collaboration, workspace organization, project tracking, task assignment, realtime communication, and productivity workflows.
 
 It provides a modern workspace experience with projects, tasks, subtasks, chat, notifications, activity tracking, search, and calendar-based planning in a single platform.
 
@@ -68,7 +68,7 @@ It provides a modern workspace experience with projects, tasks, subtasks, chat, 
 ## 🏗️ Project Structure
 
 ```bash
-taskforge/
+teamforge/
 │
 ├── frontend/   # Next.js frontend
 ├── backend/    # Express + MongoDB backend

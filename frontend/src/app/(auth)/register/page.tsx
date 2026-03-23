@@ -60,7 +60,7 @@ export default function RegisterPage() {
 
   return (
     <AuthShell
-      title="Create your TaskForge account"
+      title="Create your TeamForge account"
       subtitle="Sign up to start managing projects, teams, and tasks."
     >
       <form onSubmit={handleRegister} className="space-y-5" noValidate>

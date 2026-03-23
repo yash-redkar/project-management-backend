@@ -20,16 +20,16 @@ type NotificationPayload = {
 function getCurrentUnreadCount() {
   if (typeof window === "undefined") return 0;
   return Number(
-    localStorage.getItem("taskforge_notification_unread_count") || "0",
+    localStorage.getItem("teamforge_notification_unread_count") || "0",
   );
 }
 
 function setCurrentUnreadCount(count: number) {
   if (typeof window === "undefined") return;
-  localStorage.setItem("taskforge_notification_unread_count", String(count));
+  localStorage.setItem("teamforge_notification_unread_count", String(count));
 
   window.dispatchEvent(
-    new CustomEvent("taskforge-notifications-updated", {
+    new CustomEvent("teamforge-notifications-updated", {
       detail: { unreadCount: count },
     }),
   );

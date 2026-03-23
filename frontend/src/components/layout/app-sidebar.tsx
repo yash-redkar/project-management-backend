@@ -64,7 +64,7 @@ export function AppSidebar({
   const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
 
   useEffect(() => {
-    const existing = localStorage.getItem("taskforge_active_workspace_id");
+    const existing = localStorage.getItem("teamforge_active_workspace_id");
     if (existing) {
       setSavedWorkspaceId(existing);
     }
@@ -78,11 +78,11 @@ export function AppSidebar({
     syncUnread();
 
     window.addEventListener("storage", syncUnread);
-    window.addEventListener("taskforge-chat-unread-updated", syncUnread);
+    window.addEventListener("teamforge-chat-unread-updated", syncUnread);
 
     return () => {
       window.removeEventListener("storage", syncUnread);
-      window.removeEventListener("taskforge-chat-unread-updated", syncUnread);
+      window.removeEventListener("teamforge-chat-unread-updated", syncUnread);
     };
   }, []);
 
@@ -90,7 +90,7 @@ export function AppSidebar({
     const stored =
       typeof window !== "undefined"
         ? Number(
-            localStorage.getItem("taskforge_notification_unread_count") || "0",
+            localStorage.getItem("teamforge_notification_unread_count") || "0",
           )
         : 0;
 
@@ -103,20 +103,20 @@ export function AppSidebar({
 
       if (typeof window !== "undefined") {
         localStorage.setItem(
-          "taskforge_notification_unread_count",
+          "teamforge_notification_unread_count",
           String(count),
         );
       }
     };
 
     window.addEventListener(
-      "taskforge-notifications-updated",
+      "teamforge-notifications-updated",
       syncNotifications,
     );
 
     return () => {
       window.removeEventListener(
-        "taskforge-notifications-updated",
+        "teamforge-notifications-updated",
         syncNotifications,
       );
     };
@@ -207,7 +207,7 @@ export function AppSidebar({
           T
         </div>
         <div>
-          <p className="text-sm font-semibold text-white">TaskForge</p>
+          <p className="text-sm font-semibold text-white">TeamForge</p>
           <p className="text-xs text-slate-400">Project command center</p>
         </div>
       </div>

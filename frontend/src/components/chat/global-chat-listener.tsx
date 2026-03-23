@@ -62,7 +62,7 @@ export function GlobalChatListener() {
       try {
         const rawWorkspaceId =
           typeof window !== "undefined"
-            ? localStorage.getItem("taskforge_active_workspace_id") || ""
+            ? localStorage.getItem("teamforge_active_workspace_id") || ""
             : "";
 
         if (!rawWorkspaceId) return;

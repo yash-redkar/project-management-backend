@@ -1,4 +1,4 @@
-export const CHAT_UNREAD_STORAGE_KEY = "taskforge_chat_unread_counts";
+export const CHAT_UNREAD_STORAGE_KEY = "teamforge_chat_unread_counts";
 
 export function getChatUnreadCounts(): Record<string, number> {
   if (typeof window === "undefined") return {};
@@ -22,7 +22,7 @@ export function incrementChatUnread(conversationId: string) {
   const counts = getChatUnreadCounts();
   counts[conversationId] = (counts[conversationId] || 0) + 1;
   setChatUnreadCounts(counts);
-  window.dispatchEvent(new Event("taskforge-chat-unread-updated"));
+  window.dispatchEvent(new Event("teamforge-chat-unread-updated"));
 }
 
 export function clearChatUnread(conversationId: string) {
@@ -31,7 +31,7 @@ export function clearChatUnread(conversationId: string) {
   const counts = getChatUnreadCounts();
   counts[conversationId] = 0;
   setChatUnreadCounts(counts);
-  window.dispatchEvent(new Event("taskforge-chat-unread-updated"));
+  window.dispatchEvent(new Event("teamforge-chat-unread-updated"));
 }
 
 export function getTotalUnreadCount() {

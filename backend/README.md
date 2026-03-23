@@ -1,6 +1,6 @@
-# TaskForge Backend ⚙️
+# TeamForge Backend ⚙️
 
-Backend API for **TaskForge**, a full-stack SaaS project management platform.
+Backend API for **TeamForge**, a full-stack SaaS project management platform.
 
 This backend powers authentication, workspaces, projects, tasks, subtasks, comments, attachments, invitations, notifications, activity logs, search, and realtime collaboration features.
 

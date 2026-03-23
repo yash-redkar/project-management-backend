@@ -176,11 +176,11 @@ export function AppNavbar({
 
     if (typeof window !== "undefined") {
       localStorage.setItem(
-        "taskforge_notification_unread_count",
+        "teamforge_notification_unread_count",
         String(count),
       );
       window.dispatchEvent(
-        new CustomEvent("taskforge-notifications-updated", {
+        new CustomEvent("teamforge-notifications-updated", {
           detail: { unreadCount: count },
         }),
       );
@@ -210,7 +210,7 @@ export function AppNavbar({
     const stored =
       typeof window !== "undefined"
         ? Number(
-            localStorage.getItem("taskforge_notification_unread_count") || "0",
+            localStorage.getItem("teamforge_notification_unread_count") || "0",
           )
         : 0;
 
@@ -223,16 +223,16 @@ export function AppNavbar({
 
       if (typeof window !== "undefined") {
         localStorage.setItem(
-          "taskforge_notification_unread_count",
+          "teamforge_notification_unread_count",
           String(count),
         );
       }
     };
 
-    window.addEventListener("taskforge-notifications-updated", syncUnread);
+    window.addEventListener("teamforge-notifications-updated", syncUnread);
 
     return () => {
-      window.removeEventListener("taskforge-notifications-updated", syncUnread);
+      window.removeEventListener("teamforge-notifications-updated", syncUnread);
     };
   }, []);
 

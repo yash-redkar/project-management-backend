@@ -58,7 +58,7 @@ export default function TasksPage() {
 
   useEffect(() => {
     const savedWorkspaceId =
-      localStorage.getItem("taskforge_active_workspace_id") || "";
+      localStorage.getItem("teamforge_active_workspace_id") || "";
     setWorkspaceId(savedWorkspaceId);
   }, []);
 

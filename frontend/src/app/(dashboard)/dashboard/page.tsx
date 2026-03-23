@@ -234,7 +234,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const value = Number(
-      localStorage.getItem("taskforge_notification_unread_count") || "0",
+      localStorage.getItem("teamforge_notification_unread_count") || "0",
     );
     setNotificationCount(value);
 
@@ -245,13 +245,13 @@ export default function DashboardPage() {
     };
 
     window.addEventListener(
-      "taskforge-notifications-updated",
+      "teamforge-notifications-updated",
       syncNotifications,
     );
 
     return () => {
       window.removeEventListener(
-        "taskforge-notifications-updated",
+        "teamforge-notifications-updated",
         syncNotifications,
       );
     };

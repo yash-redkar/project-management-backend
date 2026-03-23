@@ -1,6 +1,6 @@
 import type { ProjectPriority, ProjectStatus, TaskStatus } from "@/types/app";
 
-export const APP_NAME = "TaskForge";
+export const APP_NAME = "TeamForge";
 
 export const PROJECT_STATUSES: ProjectStatus[] = [
   "Planning",

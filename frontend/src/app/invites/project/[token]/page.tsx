@@ -33,7 +33,7 @@ export default function AcceptProjectInvitePage() {
         setStatus("success");
         setMessage(data?.message || "Project invite accepted successfully");
         setSubMessage(
-          "Redirecting to workspaces... You may close this tab if TaskForge is already open.",
+          "Redirecting to workspaces... You may close this tab if TeamForge is already open.",
         );
 
         toast.success(data?.message || "Project invite accepted successfully");

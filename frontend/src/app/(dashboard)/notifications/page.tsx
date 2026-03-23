@@ -184,11 +184,11 @@ export default function NotificationsPage() {
   const syncUnreadCount = (count: number) => {
     if (typeof window !== "undefined") {
       localStorage.setItem(
-        "taskforge_notification_unread_count",
+        "teamforge_notification_unread_count",
         String(count),
       );
       window.dispatchEvent(
-        new CustomEvent("taskforge-notifications-updated", {
+        new CustomEvent("teamforge-notifications-updated", {
           detail: { unreadCount: count },
         }),
       );

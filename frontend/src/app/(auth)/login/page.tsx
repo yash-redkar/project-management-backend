@@ -54,7 +54,7 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      title="Log in to TaskForge"
+      title="Log in to TeamForge"
       subtitle="Enter your credentials to continue to your workspace."
     >
       <form onSubmit={handleLogin} className="space-y-5" noValidate>

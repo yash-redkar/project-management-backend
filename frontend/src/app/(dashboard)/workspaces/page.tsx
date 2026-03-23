@@ -137,7 +137,7 @@ export default function WorkspacesPage() {
                       href={`/workspaces/${workspace._id}`}
                       onClick={() => {
                         localStorage.setItem(
-                          "taskforge_active_workspace_id",
+                          "teamforge_active_workspace_id",
                           workspace._id,
                         );
                       }}

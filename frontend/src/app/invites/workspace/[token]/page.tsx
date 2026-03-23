@@ -27,7 +27,7 @@ export default function AcceptWorkspaceInvitePage() {
         setStatus("success");
         setMessage(data?.message || "Invite accepted successfully");
         setSubMessage(
-          "Redirecting to workspaces... You may close this tab if TaskForge is already open.",
+          "Redirecting to workspaces... You may close this tab if TeamForge is already open.",
         );
 
         toast.success(

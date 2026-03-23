@@ -18,7 +18,7 @@ export function AuthShell({
               </div>
               <div>
                 <p className="text-xl font-semibold tracking-tight text-white">
-                  TaskForge
+                  TeamForge
                 </p>
                 <p className="text-sm text-slate-400">Project command center</p>
               </div>
@@ -39,7 +39,7 @@ export function AuthShell({
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-slate-900/60 p-6">
-            <p className="text-sm text-slate-400">Why teams choose TaskForge</p>
+            <p className="text-sm text-slate-400">Why teams choose TeamForge</p>
             <div className="mt-4 grid gap-4 sm:grid-cols-3">
               <div>
                 <p className="text-2xl font-semibold text-white">24/7</p>

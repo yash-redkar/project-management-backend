@@ -1,6 +1,6 @@
-# TaskForge Frontend 🎨
+# TeamForge Frontend 🎨
 
-Frontend application for **TaskForge**, a full-stack SaaS project management platform.
+Frontend application for **TeamForge**, a full-stack SaaS project management platform.
 
 This frontend handles the user interface for authentication, dashboard views, workspaces, projects, tasks, chat, notifications, activity tracking, search, and calendar-based task planning.
 

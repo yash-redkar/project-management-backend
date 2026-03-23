@@ -76,7 +76,7 @@ app.use("/api/v1", notificationRoutes);
 app.use("/api/v1/search", searchRoutes);
 
 app.get("/", (req, res) => {
-    res.send("Welcome to TaskForge API");
+    res.send("Welcome to TeamForge API");
 });
 
 // global error handler - MUST BE LAST

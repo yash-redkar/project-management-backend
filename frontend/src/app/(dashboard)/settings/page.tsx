@@ -369,7 +369,7 @@ export default function SettingsPage() {
 
       const activeWorkspaceId =
         typeof window !== "undefined"
-          ? localStorage.getItem("taskforge_active_workspace_id") || ""
+          ? localStorage.getItem("teamforge_active_workspace_id") || ""
           : "";
 
       if (!activeWorkspaceId) {
@@ -432,7 +432,7 @@ export default function SettingsPage() {
 
       const activeWorkspaceId =
         typeof window !== "undefined"
-          ? localStorage.getItem("taskforge_active_workspace_id") || ""
+          ? localStorage.getItem("teamforge_active_workspace_id") || ""
           : "";
 
       if (!activeWorkspaceId) {
@@ -460,10 +460,10 @@ export default function SettingsPage() {
     loadBillingData();
 
     const savedNotifications = localStorage.getItem(
-      "taskforge_notification_preferences",
+      "teamforge_notification_preferences",
     );
     const savedAppearance = localStorage.getItem(
-      "taskforge_appearance_preferences",
+      "teamforge_appearance_preferences",
     );
 
     if (savedNotifications) {
@@ -615,7 +615,7 @@ export default function SettingsPage() {
 
   const handleAppearanceSave = () => {
     localStorage.setItem(
-      "taskforge_appearance_preferences",
+      "teamforge_appearance_preferences",
       JSON.stringify(appearancePrefs),
     );
     toast.success("Appearance preferences saved locally");
@@ -623,7 +623,7 @@ export default function SettingsPage() {
 
   const handleNotificationSave = () => {
     localStorage.setItem(
-      "taskforge_notification_preferences",
+      "teamforge_notification_preferences",
       JSON.stringify(notificationPrefs),
     );
     toast.success("Notification preferences saved locally");
@@ -1530,7 +1530,7 @@ export default function SettingsPage() {
                   Notifications
                 </h3>
                 <p className="mt-1.5 text-sm text-slate-400">
-                  Choose how you want to be notified across TaskForge.
+                  Choose how you want to be notified across TeamForge.
                 </p>
               </div>
 
@@ -1682,7 +1682,7 @@ export default function SettingsPage() {
                   Appearance
                 </h3>
                 <p className="mt-1.5 text-sm text-slate-400">
-                  Customize how TaskForge looks on your device.
+                  Customize how TeamForge looks on your device.
                 </p>
               </div>
 

@@ -10,7 +10,7 @@ export function LandingNavbar() {
           </div>
           <div>
             <p className="text-xl font-semibold tracking-tight text-white">
-              TaskForge
+              TeamForge
             </p>
           </div>
         </Link>

@@ -13,7 +13,7 @@ export function ProductivitySection() {
             Streamline Your Workflow & Boost Team Productivity
           </h2>
           <p className="mt-5 max-w-xl text-base leading-8 text-slate-300">
-            From planning to execution, TaskForge helps teams stay aligned,
+            From planning to execution, TeamForge helps teams stay aligned,
             reduce clutter, and ship faster with a clean productivity-first
             workspace.
           </p>
@@ -87,7 +87,7 @@ export function ProductivitySection() {
 
               <div className="md:col-span-2 rounded-2xl bg-slate-950/60 p-4">
                 <p className="text-sm text-slate-400">
-                  Why teams choose TaskForge
+                  Why teams choose TeamForge
                 </p>
                 <p className="mt-3 text-base leading-7 text-slate-200">
                   A focused workspace that combines task management, team

@@ -1,7 +1,7 @@
 {
-    "name": "taskforge-backend",
+    "name": "teamforge-backend",
     "version": "1.0.0",
-    "description": "Backend API for TaskForge, a SaaS project management and team collaboration platform.",
+    "description": "Backend API for TeamForge, a SaaS project management and team collaboration platform.",
     "main": "index.js",
     "type": "module",
     "scripts": {

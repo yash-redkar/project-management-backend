@@ -75,7 +75,7 @@ export default function LandingPage() {
             </div>
             <div>
               <p className="text-2xl font-semibold tracking-tight text-white">
-                TaskForge
+                TeamForge
               </p>
               <p className="text-xs text-slate-400">Project command center</p>
             </div>
@@ -196,7 +196,7 @@ export default function LandingPage() {
             </h2>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-400">
-              From planning to execution, TaskForge helps teams stay aligned,
+              From planning to execution, TeamForge helps teams stay aligned,
               reduce clutter, and ship faster with a clean productivity-first
               workspace.
             </p>
@@ -246,7 +246,7 @@ export default function LandingPage() {
       <section id="about" className="mx-auto max-w-7xl px-6 py-24">
         <div className="text-center">
           <h2 className="text-5xl font-semibold tracking-tight text-white">
-            Why Teams Choose TaskForge
+            Why Teams Choose TeamForge
           </h2>
           <p className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-slate-400">
             Everything you need to organize workspaces, track projects,
@@ -287,7 +287,7 @@ export default function LandingPage() {
                 T
               </div>
               <div>
-                <p className="text-2xl font-semibold text-white">TaskForge</p>
+                <p className="text-2xl font-semibold text-white">TeamForge</p>
                 <p className="text-sm text-slate-400">
                   Modern project management for focused teams.
                 </p>
@@ -324,7 +324,7 @@ export default function LandingPage() {
         </div>
 
         <div className="mx-auto flex max-w-7xl flex-col gap-4 border-t border-slate-800 px-6 py-6 text-sm text-slate-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>© 2026 TaskForge. All rights reserved.</p>
+          <p>© 2026 TeamForge. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <p>Privacy</p>
             <p>Terms</p>

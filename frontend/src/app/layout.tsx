@@ -10,7 +10,7 @@ const font = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "TaskForge",
+  title: "TeamForge",
   description: "Premium project management SaaS dashboard UI",
 };
 
