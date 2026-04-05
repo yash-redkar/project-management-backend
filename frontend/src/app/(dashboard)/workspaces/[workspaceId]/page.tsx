@@ -138,22 +138,22 @@ export default function WorkspaceDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 text-white">
+      <div className="space-y-4 text-[var(--app-text)]">
         <h1 className="text-3xl font-semibold">Workspace</h1>
-        <p className="text-slate-400">Loading workspace details...</p>
+        <p className="text-[var(--app-muted)]">Loading workspace details...</p>
       </div>
     );
   }
 
   if (error || !workspaceItem) {
     return (
-      <div className="space-y-4 text-white">
+      <div className="space-y-4 text-[var(--app-text)]">
         <h1 className="text-3xl font-semibold">Workspace</h1>
         <p className="text-red-400">{error || "Workspace not found"}</p>
 
         <Link
           href="/workspaces"
-          className="inline-flex rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-200 transition hover:bg-slate-800"
+          className="inline-flex rounded-xl border border-slate-200 px-4 py-2 text-sm text-[var(--app-text)] transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
         >
           Back to Workspaces
         </Link>
@@ -167,68 +167,70 @@ export default function WorkspaceDetailsPage() {
 
   return (
     <>
-      <div className="space-y-6 text-white">
+      <div className="space-y-6 text-[var(--app-text)]">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-semibold">{workspace.name}</h1>
 
-              <span className="rounded-full border border-slate-700 bg-zinc-950 px-2.5 py-1 text-xs text-slate-300">
+              <span className="rounded-full border border-slate-200 bg-[var(--app-surface-2)] px-2.5 py-1 text-xs text-[var(--app-text)] dark:border-slate-800">
                 {workspace.plan || "free"}
               </span>
             </div>
 
-            <p className="mt-2 text-slate-400">
+            <p className="mt-2 text-[var(--app-muted)]">
               Workspace details and collaboration overview.
             </p>
           </div>
 
           <Link
             href="/workspaces"
-            className="inline-flex rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-200 transition hover:bg-slate-800"
+            className="inline-flex rounded-xl border border-slate-200 px-4 py-2 text-sm text-[var(--app-text)] transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
           >
             Back
           </Link>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-            <p className="text-sm text-slate-400">Workspace Name</p>
+          <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 shadow-sm dark:border-slate-800">
+            <p className="text-sm text-[var(--app-muted)]">Workspace Name</p>
             <p className="mt-3 text-xl font-semibold">{workspace.name}</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-            <p className="text-sm text-slate-400">Slug</p>
+          <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 shadow-sm dark:border-slate-800">
+            <p className="text-sm text-[var(--app-muted)]">Slug</p>
             <p className="mt-3 text-xl font-semibold">{workspace.slug}</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-            <p className="text-sm text-slate-400">Role</p>
+          <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 shadow-sm dark:border-slate-800">
+            <p className="text-sm text-[var(--app-muted)]">Role</p>
             <p className="mt-3 text-xl font-semibold capitalize">{role}</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-            <p className="text-sm text-slate-400">Status</p>
+          <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 shadow-sm dark:border-slate-800">
+            <p className="text-sm text-[var(--app-muted)]">Status</p>
             <p className="mt-3 text-xl font-semibold capitalize">{status}</p>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-          <h2 className="text-xl font-semibold text-white">
+        <div className="rounded-3xl border border-slate-200 bg-[var(--app-surface)] p-6 shadow-sm dark:border-slate-800">
+          <h2 className="text-xl font-semibold text-[var(--app-text)]">
             Workspace Overview
           </h2>
 
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-[var(--app-muted)]">
             Manage projects and get a quick overview of workspace collaboration.
           </p>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+            <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] p-5 shadow-sm dark:border-slate-800">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">Projects</h3>
+                <h3 className="text-lg font-semibold text-[var(--app-text)]">
+                  Projects
+                </h3>
 
                 <div className="flex items-center gap-2">
-                  <span className="rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-slate-300">
+                  <span className="rounded-full border border-slate-200 bg-[var(--app-surface)] px-2.5 py-1 text-xs text-[var(--app-text)] dark:border-slate-800">
                     {projects.length}
                   </span>
 
@@ -242,7 +244,7 @@ export default function WorkspaceDetailsPage() {
               </div>
 
               {projects.length === 0 ? (
-                <p className="mt-3 text-sm text-slate-400">
+                <p className="mt-3 text-sm text-[var(--app-muted)]">
                   No projects found in this workspace yet.
                 </p>
               ) : (
@@ -254,13 +256,13 @@ export default function WorkspaceDetailsPage() {
                       <Link
                         key={project._id || index}
                         href={`/workspaces/${workspaceId}/projects/${project._id}`}
-                        className="block rounded-xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-slate-700 hover:bg-slate-900"
+                        className="block rounded-xl border border-slate-200 bg-[var(--app-surface)] p-4 shadow-sm transition hover:border-slate-300 hover:bg-slate-100 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-900"
                       >
-                        <h4 className="text-sm font-semibold text-white">
+                        <h4 className="text-sm font-semibold text-[var(--app-text)]">
                           {project.name || "Untitled Project"}
                         </h4>
 
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-[var(--app-muted)]">
                           {project.description || "No description"}
                         </p>
                       </Link>
@@ -270,11 +272,13 @@ export default function WorkspaceDetailsPage() {
               )}
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+            <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] p-5 shadow-sm dark:border-slate-800">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Members</h3>
-                  <p className="mt-2 text-sm text-slate-400">
+                  <h3 className="text-lg font-semibold text-[var(--app-text)]">
+                    Members
+                  </h3>
+                  <p className="mt-2 text-sm text-[var(--app-muted)]">
                     Quick preview of your workspace team.
                   </p>
                 </div>
@@ -289,17 +293,17 @@ export default function WorkspaceDetailsPage() {
 
               <div className="mt-5">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-semibold text-white">
+                  <h4 className="text-sm font-semibold text-[var(--app-text)]">
                     Team Members
                   </h4>
 
-                  <span className="rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs text-slate-300">
+                  <span className="rounded-full border border-slate-200 bg-[var(--app-surface)] px-2.5 py-1 text-xs text-[var(--app-text)] dark:border-slate-800">
                     {members.length}
                   </span>
                 </div>
 
                 {members.length === 0 ? (
-                  <p className="mt-3 text-sm text-slate-400">
+                  <p className="mt-3 text-sm text-[var(--app-muted)]">
                     No members found in this workspace.
                   </p>
                 ) : (
@@ -323,7 +327,7 @@ export default function WorkspaceDetailsPage() {
                       return (
                         <div
                           key={memberUser?._id || index}
-                          className="rounded-xl border border-slate-800 bg-slate-900/60 p-4"
+                          className="rounded-xl border border-slate-200 bg-[var(--app-surface)] p-4 shadow-sm dark:border-slate-800"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex min-w-0 items-center gap-3">
@@ -332,7 +336,7 @@ export default function WorkspaceDetailsPage() {
                               </div>
 
                               <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-white">
+                                <p className="truncate text-sm font-semibold text-[var(--app-text)]">
                                   {displayName}
                                   {isSelf ? (
                                     <span className="ml-2 text-xs font-normal text-cyan-400">
@@ -340,13 +344,13 @@ export default function WorkspaceDetailsPage() {
                                     </span>
                                   ) : null}
                                 </p>
-                                <p className="truncate text-xs text-slate-400">
+                                <p className="truncate text-xs text-[var(--app-muted)]">
                                   {email}
                                 </p>
                               </div>
                             </div>
 
-                            <span className="rounded-full border border-slate-700 bg-zinc-950 px-2.5 py-1 text-[11px] capitalize text-slate-300">
+                            <span className="rounded-full border border-slate-200 bg-[var(--app-surface-2)] px-2.5 py-1 text-[11px] capitalize text-[var(--app-text)] dark:border-slate-800">
                               {memberRole}
                             </span>
                           </div>

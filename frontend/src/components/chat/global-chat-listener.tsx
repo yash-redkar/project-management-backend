@@ -1,47 +1,41 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
 import { getSocket } from "@/lib/socket";
-import { incrementChatUnread } from "@/lib/chat-unread";
+import {
+  incrementChatUnread,
+  upsertChatConversationMeta,
+} from "@/lib/chat-unread";
 import { chatService } from "@/services/chat.service";
 import { projectService } from "@/services/project.service";
 
-function getRouteInfo(pathname: string) {
-  const workspaceChatMatch = pathname.match(/^\/workspaces\/([^/]+)\/chat$/);
-  const projectChatMatch = pathname.match(
-    /^\/workspaces\/([^/]+)\/projects\/([^/]+)\/chat$/,
-  );
+function normalizeMaybeObjectId(value: any): string {
+  if (!value) return "";
 
-  if (projectChatMatch) {
-    return {
-      type: "project" as const,
-      workspaceId: projectChatMatch[1],
-      projectId: projectChatMatch[2],
-    };
+  if (typeof value === "string") return value;
+
+  if (typeof value === "object" && typeof value._id === "string") {
+    return value._id;
   }
 
-  if (workspaceChatMatch) {
-    return {
-      type: "workspace" as const,
-      workspaceId: workspaceChatMatch[1],
-      projectId: null,
-    };
+  if (typeof value === "object" && typeof value.$oid === "string") {
+    return value.$oid;
   }
 
-  return {
-    type: null,
-    workspaceId: null,
-    projectId: null,
-  };
+  if (typeof value?.toString === "function") {
+    const str = value.toString();
+    if (str && str !== "[object Object]") return str;
+  }
+
+  return "";
 }
 
 export function GlobalChatListener() {
-  const pathname = usePathname();
   const { user } = useAuth();
 
   const joinedConversationIdsRef = useRef<Set<string>>(new Set());
+  const knownConversationIdsRef = useRef<Set<string>>(new Set());
   const activeConversationIdRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -56,6 +50,7 @@ export function GlobalChatListener() {
 
       socket.emit("join_conversation", { conversationId });
       joinedConversationIdsRef.current.add(conversationId);
+      knownConversationIdsRef.current.add(conversationId);
     };
 
     const bootstrapKnownConversations = async () => {
@@ -73,6 +68,10 @@ export function GlobalChatListener() {
         const workspaceConversationId = workspaceConversationRes?.data?._id;
 
         if (workspaceConversationId) {
+          upsertChatConversationMeta(String(workspaceConversationId), {
+            conversationType: "workspace",
+            workspaceId: rawWorkspaceId,
+          });
           joinConversationRoom(workspaceConversationId);
         }
 
@@ -98,6 +97,11 @@ export function GlobalChatListener() {
             const conversationId = conversationRes?.data?._id;
 
             if (conversationId) {
+              upsertChatConversationMeta(String(conversationId), {
+                conversationType: "project",
+                workspaceId: rawWorkspaceId,
+                projectId: String(projectId),
+              });
               joinConversationRoom(conversationId);
             }
           } catch (error) {
@@ -113,78 +117,60 @@ export function GlobalChatListener() {
       }
     };
 
-    const syncActiveConversation = async () => {
-      try {
-        const routeInfo = getRouteInfo(pathname);
-
-        if (!routeInfo.type || !routeInfo.workspaceId) {
-          activeConversationIdRef.current = null;
-          return;
-        }
-
-        if (routeInfo.type === "workspace") {
-          const workspaceConversationRes =
-            await chatService.getWorkspaceConversation(routeInfo.workspaceId);
-
-          const conversationId = workspaceConversationRes?.data?._id || null;
-
-          activeConversationIdRef.current = conversationId;
-
-          if (conversationId) {
-            joinConversationRoom(conversationId);
-          }
-
-          return;
-        }
-
-        if (routeInfo.type === "project" && routeInfo.projectId) {
-          const projectConversationRes =
-            await chatService.getProjectConversation(
-              routeInfo.workspaceId,
-              routeInfo.projectId,
-            );
-
-          const conversationId = projectConversationRes?.data?._id || null;
-
-          activeConversationIdRef.current = conversationId;
-
-          if (conversationId) {
-            joinConversationRoom(conversationId);
-          }
-
-          return;
-        }
-
-        activeConversationIdRef.current = null;
-      } catch (error) {
-        console.error("Failed to sync active conversation:", error);
-        activeConversationIdRef.current = null;
-      }
-    };
-
     const handleConnect = () => {
       joinedConversationIdsRef.current.clear();
+
+      if (knownConversationIdsRef.current.size > 0) {
+        knownConversationIdsRef.current.forEach((conversationId) => {
+          socket.emit("join_conversation", { conversationId });
+          joinedConversationIdsRef.current.add(conversationId);
+        });
+        return;
+      }
+
       void bootstrapKnownConversations();
-      void syncActiveConversation();
     };
 
     const handleMessageCreated = (message: any) => {
       const conversationId =
-        typeof message?.conversation === "string"
-          ? message.conversation
-          : message?.conversation?._id;
+        normalizeMaybeObjectId(message?.conversationId) ||
+        normalizeMaybeObjectId(message?.conversation);
 
-      const senderId = message?.sender?._id;
+      const conversationType = String(
+        message?.conversationType || "",
+      ).toLowerCase();
+      const workspaceId = normalizeMaybeObjectId(message?.workspaceId);
+      const projectId = normalizeMaybeObjectId(message?.projectId);
+
+      const senderId = normalizeMaybeObjectId(message?.sender?._id);
 
       if (!conversationId) return;
       if (String(senderId) === String(user._id)) return;
+
+      upsertChatConversationMeta(String(conversationId), {
+        conversationType,
+        workspaceId,
+        projectId,
+      });
 
       const isCurrentlyOpenConversation =
         String(activeConversationIdRef.current) === String(conversationId);
 
       if (!isCurrentlyOpenConversation) {
-        incrementChatUnread(String(conversationId));
+        incrementChatUnread(String(conversationId), {
+          conversationType,
+          workspaceId,
+          projectId,
+        });
       }
+    };
+
+    const handleActiveConversationChanged = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        conversationId?: string | null;
+      }>;
+      activeConversationIdRef.current =
+        customEvent.detail?.conversationId || null;
     };
 
     if (socket.connected) {
@@ -194,13 +180,20 @@ export function GlobalChatListener() {
     socket.on("connect", handleConnect);
     socket.on("message_created", handleMessageCreated);
 
-    void syncActiveConversation();
+    window.addEventListener(
+      "teamforge-active-conversation-changed",
+      handleActiveConversationChanged,
+    );
 
     return () => {
       socket.off("connect", handleConnect);
       socket.off("message_created", handleMessageCreated);
+      window.removeEventListener(
+        "teamforge-active-conversation-changed",
+        handleActiveConversationChanged,
+      );
     };
-  }, [pathname, user?._id]);
+  }, [user?._id]);
 
   return null;
 }

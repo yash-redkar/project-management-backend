@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { useState } from "react";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { parseApiResponse } from "@/lib/response";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -30,15 +31,15 @@ export default function ForgotPasswordPage() {
         },
       );
 
-      const data = await res.json();
+      const data = await parseApiResponse(res);
       console.log("Forgot password response:", data);
 
       if (res.ok) {
         toast.success(
-          data.message || "Password reset link sent to your email.",
+          data?.message || "Password reset link sent to your email.",
         );
       } else {
-        toast.error(data.message || "Failed to send reset link.");
+        toast.error(data?.message || "Failed to send reset link.");
       }
     } catch (err) {
       console.error("Forgot password error:", err);

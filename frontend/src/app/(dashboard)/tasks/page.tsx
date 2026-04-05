@@ -310,7 +310,7 @@ export default function TasksPage() {
   return (
     <>
       <div className="space-y-5 text-white">
-        <div className="rounded-2xl border border-slate-800 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-5">
+        <div className="rounded-2xl border border-slate-800 bg-linear-to-br from-slate-900 via-slate-950 to-slate-900 p-4 sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-2xl">
               <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">

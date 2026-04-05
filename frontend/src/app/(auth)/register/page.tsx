@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { useState } from "react";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { parseApiResponse } from "@/lib/response";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
@@ -41,14 +42,14 @@ export default function RegisterPage() {
         credentials: "include",
       });
 
-      const data = await res.json();
+      const data = await parseApiResponse(res);
       console.log("Register response:", data);
 
       if (res.ok) {
         toast.success("Registration successful. Please log in.");
         window.location.href = "/login";
       } else {
-        toast.error(data.message || "Registration failed");
+        toast.error(data?.message || "Registration failed");
       }
     } catch (err) {
       console.error("Register error:", err);
@@ -110,7 +111,10 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+          className="w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+          style={{
+            backgroundImage: "linear-gradient(90deg, #22d3ee 0%, #6366f1 100%)",
+          }}
         >
           {isLoading ? "Creating account..." : "Create Account"}
         </button>

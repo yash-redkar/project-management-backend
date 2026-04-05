@@ -200,10 +200,17 @@ export function AppSidebar({
 
   return (
     <aside
-      className={`h-full flex-col overflow-hidden border-r border-slate-800 bg-zinc-950/95 backdrop-blur-xl ${className ?? ""}`}
+      className={`h-full flex-col overflow-hidden border-r border-slate-800 bg-[var(--app-surface)] backdrop-blur-xl ${className ?? ""}`}
     >
       <div className="flex items-center gap-3 px-4 py-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-cyan-400 text-white shadow-lg shadow-cyan-500/10">
+        <div
+          className="flex h-10 w-10 items-center justify-center rounded-2xl text-white shadow-[0_8px_20px_rgba(14,165,233,0.22)]"
+          style={{
+            backgroundColor: "#0ea5e9",
+            backgroundImage:
+              "linear-gradient(135deg, #06b6d4 0%, #2563eb 100%)",
+          }}
+        >
           T
         </div>
         <div>
@@ -213,7 +220,7 @@ export function AppSidebar({
       </div>
 
       <div className="px-4">
-        <button className="w-full rounded-2xl border border-slate-800 bg-slate-900/70 p-3 text-left transition hover:bg-slate-800/80">
+        <button className="w-full rounded-2xl border border-slate-800 bg-[var(--app-surface-2)] p-3 text-left transition hover:bg-slate-800/80">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
@@ -232,7 +239,7 @@ export function AppSidebar({
         </button>
       </div>
 
-      <div className="mt-6 flex-1 overflow-y-auto px-2 pb-4">
+      <div className="mt-4 flex-1 overflow-y-auto px-2 pb-4">
         <p className="mb-3 px-4 text-xs uppercase tracking-[0.2em] text-slate-500">
           Navigate
         </p>
@@ -280,7 +287,7 @@ export function AppSidebar({
           })}
         </nav>
 
-        <p className="mb-3 mt-6 px-4 text-xs uppercase tracking-[0.2em] text-slate-500">
+        <p className="mb-3 mt-4 px-4 text-xs uppercase tracking-[0.2em] text-slate-500">
           Tools
         </p>
 
@@ -328,7 +335,7 @@ export function AppSidebar({
       </div>
 
       <div className="border-t border-slate-800 px-4 py-4">
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-800 bg-[var(--app-surface-2)] p-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-cyan-500 to-indigo-500 text-sm font-semibold text-white">
             {initials}
           </div>

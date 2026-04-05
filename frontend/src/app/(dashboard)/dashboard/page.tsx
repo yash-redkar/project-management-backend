@@ -105,29 +105,33 @@ function getProjectStatusStyle(label: string) {
 }
 
 function getWeeklyBars(activities: any[]) {
-  const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const now = new Date();
-  const start = new Date(now);
-  const day = start.getDay();
-  const mondayOffset = day === 0 ? -6 : 1 - day;
-  start.setDate(now.getDate() + mondayOffset);
-  start.setHours(0, 0, 0, 0);
+  const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-  return labels.map((label, index) => {
-    const dayStart = new Date(start);
-    dayStart.setDate(start.getDate() + index);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    const dayEnd = new Date(dayStart);
-    dayEnd.setHours(23, 59, 59, 999);
-
-    const dayActivities = activities.filter((item) => {
+  const normalizedActivities = activities
+    .map((item) => {
       const value = item?.createdAt ? new Date(item.createdAt) : null;
-      return value && value >= dayStart && value <= dayEnd;
-    });
+      if (!value || Number.isNaN(value.getTime())) return null;
+      value.setHours(0, 0, 0, 0);
+      return value.getTime();
+    })
+    .filter((value): value is number => typeof value === "number");
+
+  return Array.from({ length: 7 }).map((_, offset) => {
+    const dayDate = new Date(today);
+    dayDate.setDate(today.getDate() - (6 - offset));
+
+    const dayStartMs = dayDate.getTime();
+
+    const total = normalizedActivities.filter(
+      (timestamp) => timestamp === dayStartMs,
+    ).length;
 
     return {
-      day: label,
-      total: dayActivities.length,
+      day: labels[dayDate.getDay()],
+      total,
     };
   });
 }
@@ -167,7 +171,7 @@ export default function DashboardPage() {
             const [projectsRes, tasksRes, activityRes] = await Promise.all([
               projectService.getProjectsByWorkspace(workspace._id),
               taskService.getWorkspaceTasks(workspace._id, { limit: 200 }),
-              activityService.getWorkspaceActivity(workspace._id, 20),
+              activityService.getWorkspaceActivity(workspace._id, 200),
             ]);
 
             const projects = Array.isArray(projectsRes?.data)
@@ -369,8 +373,8 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="space-y-6 text-white">
-        <section className="rounded-3xl border border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.08),transparent_25%),radial-gradient(circle_at_top_right,rgba(99,102,241,0.08),transparent_25%),linear-gradient(to_right,rgba(15,23,42,0.92),rgba(2,6,23,0.96),rgba(10,10,10,0.96))] px-6 py-6">
+      <div className="space-y-6 text-[var(--app-text)]">
+        <section className="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,var(--app-surface),var(--app-surface-2))] px-6 py-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
           <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-sky-500/20 bg-sky-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.22em] text-sky-300">
@@ -378,11 +382,11 @@ export default function DashboardPage() {
                 Overview
               </div>
 
-              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+              <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[var(--app-text)] sm:text-5xl">
                 Welcome back, {displayName}
               </h1>
 
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400 sm:text-base">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--app-muted)] sm:text-base">
                 Track projects, monitor workspaces, and keep your team moving
                 from one clean overview.
               </p>
@@ -407,7 +411,7 @@ export default function DashboardPage() {
             return (
               <div
                 key={item.title}
-                className="group overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-950/90 p-5 transition duration-300 hover:border-slate-700"
+                className="group overflow-hidden rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,var(--app-surface),var(--app-surface-2))] p-5 transition duration-300 hover:border-slate-300"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div
@@ -423,26 +427,28 @@ export default function DashboardPage() {
                   </span>
                 </div>
 
-                <p className="mt-6 text-4xl font-semibold tracking-tight text-white">
+                <p className="mt-6 text-4xl font-semibold tracking-tight text-[var(--app-text)]">
                   {item.value}
                 </p>
-                <p className="mt-2 text-base font-medium text-slate-200">
+                <p className="mt-2 text-base font-medium text-[var(--app-text)]">
                   {item.title}
                 </p>
-                <p className="mt-1 text-xs text-slate-500">{item.subtitle}</p>
+                <p className="mt-1 text-xs text-[var(--app-muted)]">
+                  {item.subtitle}
+                </p>
               </div>
             );
           })}
         </section>
 
         <section className="grid gap-6 xl:grid-cols-2">
-          <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-950/90 p-6">
+          <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,var(--app-surface),var(--app-surface-2))] p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-semibold text-white">
+                <h2 className="text-2xl font-semibold text-[var(--app-text)]">
                   Weekly Activity
                 </h2>
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[var(--app-muted)]">
                   Your team&apos;s activity over the past week
                 </p>
               </div>
@@ -452,15 +458,15 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            <div className="mt-6 rounded-3xl border border-slate-800 bg-[#090d18] p-4">
+            <div className="mt-6 rounded-3xl border border-slate-200 bg-[var(--app-surface)] p-4">
               <WeeklyChart data={weeklyBars} />
             </div>
 
-            <div className="mt-4 grid grid-cols-7 gap-2 border-t border-slate-800 pt-4">
+            <div className="mt-4 grid grid-cols-7 gap-2 border-t border-slate-200 pt-4">
               {weeklyBars.map((item) => (
                 <div key={item.day} className="text-center">
-                  <p className="text-xs text-slate-500">{item.day}</p>
-                  <p className="mt-1 text-sm font-semibold text-white">
+                  <p className="text-xs text-[var(--app-muted)]">{item.day}</p>
+                  <p className="mt-1 text-sm font-semibold text-[var(--app-text)]">
                     {item.total}
                   </p>
                 </div>
@@ -468,13 +474,13 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-950/90 p-6">
+          <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,var(--app-surface),var(--app-surface-2))] p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-semibold text-white">
+                <h2 className="text-2xl font-semibold text-[var(--app-text)]">
                   Task Status Breakdown
                 </h2>
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[var(--app-muted)]">
                   Current distribution of task statuses
                 </p>
               </div>
@@ -484,20 +490,20 @@ export default function DashboardPage() {
               </span>
             </div>
 
-            <div className="mt-6 rounded-3xl border border-slate-800 bg-[#090d18] p-4">
+            <div className="mt-6 rounded-3xl border border-slate-200 bg-[var(--app-surface)] p-4">
               <TaskStatusChart data={taskStatusData} />
             </div>
           </div>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
-          <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-950/90 p-6">
+          <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,var(--app-surface),var(--app-surface-2))] p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-semibold text-white">
+                <h2 className="text-2xl font-semibold text-[var(--app-text)]">
                   Recent Projects
                 </h2>
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[var(--app-muted)]">
                   Track your ongoing work
                 </p>
               </div>
@@ -508,7 +514,7 @@ export default function DashboardPage() {
                     ? `/workspaces/${workspaces[0]?.workspace?._id || workspaces[0]?._id}/projects`
                     : "/workspaces"
                 }
-                className="inline-flex items-center gap-1 text-sm font-medium text-sky-300 transition hover:text-sky-200"
+                className="inline-flex items-center gap-1 text-sm font-medium text-sky-600 transition hover:text-sky-500"
               >
                 View all
                 <ArrowRight className="size-4" />
@@ -517,7 +523,7 @@ export default function DashboardPage() {
 
             <div className="mt-6 space-y-4">
               {recentProjects.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-slate-800 bg-zinc-950/50 px-6 py-12 text-center text-slate-400">
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-[var(--app-surface)] px-6 py-12 text-center text-[var(--app-muted)]">
                   No recent projects found.
                 </div>
               ) : (
@@ -536,12 +542,12 @@ export default function DashboardPage() {
                     <Link
                       key={project._id || index}
                       href={`/workspaces/${project.workspaceId}/projects/${project._id}`}
-                      className={`block rounded-2xl border border-slate-800 border-l-4 ${accent} bg-[#090d18] p-5 transition hover:border-slate-700 hover:bg-slate-950`}
+                      className={`block rounded-2xl border border-slate-200 border-l-4 ${accent} bg-[var(--app-surface)] p-5 transition hover:border-slate-300 hover:bg-[var(--app-surface-2)]`}
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-3">
-                            <h3 className="truncate text-2xl font-semibold text-white">
+                            <h3 className="truncate text-2xl font-semibold text-[var(--app-text)]">
                               {project.name}
                             </h3>
 
@@ -552,29 +558,39 @@ export default function DashboardPage() {
                             </span>
                           </div>
 
-                          <p className="mt-2 truncate text-sm text-slate-400">
+                          <p className="mt-2 truncate text-sm text-[var(--app-muted)]">
                             {project.description || "No description provided"}
                           </p>
 
                           <div className="mt-5 max-w-sm">
-                            <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
+                            <div className="mb-2 flex items-center justify-between text-xs text-[var(--app-muted)]">
                               <span>Progress</span>
                               <span>{meta.progress}%</span>
                             </div>
-                            <div className="h-2 overflow-hidden rounded-full bg-slate-800">
+                            <div
+                              className="h-2 overflow-hidden rounded-full"
+                              style={{
+                                backgroundColor:
+                                  "color-mix(in srgb, var(--app-muted) 26%, transparent)",
+                              }}
+                            >
                               <div
-                                className="h-full rounded-full bg-gradient-to-r from-sky-400 to-indigo-500"
-                                style={{ width: `${meta.progress}%` }}
+                                className="h-full rounded-full"
+                                style={{
+                                  width: `${meta.progress}%`,
+                                  backgroundImage:
+                                    "linear-gradient(90deg, #22d3ee 0%, #3b82f6 100%)",
+                                }}
                               />
                             </div>
                           </div>
                         </div>
 
                         <div className="shrink-0 text-right">
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-[var(--app-muted)]">
                             {meta.totalTasks} tasks
                           </p>
-                          <p className="mt-2 text-xs text-slate-500">
+                          <p className="mt-2 text-xs text-[var(--app-muted)]">
                             Updated{" "}
                             {formatTimeAgo(
                               project.updatedAt || project.createdAt,
@@ -589,19 +605,19 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-3xl border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-950/90 p-6">
+          <div className="rounded-3xl border border-slate-200 bg-[linear-gradient(180deg,var(--app-surface),var(--app-surface-2))] p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-2xl font-semibold text-white">
+                <h2 className="text-2xl font-semibold text-[var(--app-text)]">
                   Workspaces
                 </h2>
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-[var(--app-muted)]">
                   Jump into active collaboration
                 </p>
               </div>
 
               <button
-                className="rounded-xl border border-sky-500/15 bg-sky-500/10 px-4 py-2.5 text-sm font-medium text-sky-300 transition hover:bg-sky-500/15"
+                className="rounded-xl border border-sky-500/15 bg-sky-500/10 px-4 py-2.5 text-sm font-medium text-sky-600 transition hover:bg-sky-500/15"
                 onClick={() => setIsCreateModalOpen(true)}
               >
                 + New
@@ -609,11 +625,11 @@ export default function DashboardPage() {
             </div>
 
             {workspaces.length === 0 ? (
-              <div className="mt-6 rounded-3xl border border-dashed border-slate-800 bg-zinc-950/50 px-6 py-10 text-center">
-                <p className="text-base font-medium text-white">
+              <div className="mt-6 rounded-3xl border border-dashed border-slate-200 bg-[var(--app-surface)] px-6 py-10 text-center">
+                <p className="text-base font-medium text-[var(--app-text)]">
                   No workspaces found yet
                 </p>
-                <p className="mt-2 text-sm text-slate-400">
+                <p className="mt-2 text-sm text-[var(--app-muted)]">
                   Create your first workspace to start organizing projects.
                 </p>
               </div>
@@ -625,41 +641,41 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={workspace._id || index}
-                      className="overflow-hidden rounded-2xl border border-slate-800 bg-[#090d18] transition hover:border-slate-700"
+                      className="overflow-hidden rounded-2xl border border-slate-200 bg-[var(--app-surface)] transition hover:border-slate-300"
                     >
                       <div className="p-5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 text-sky-300">
+                              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] text-sky-600">
                                 <Building2 className="size-5" />
                               </div>
 
                               <div className="min-w-0">
-                                <h3 className="truncate text-2xl font-semibold text-white">
+                                <h3 className="truncate text-2xl font-semibold text-[var(--app-text)]">
                                   {workspace.name}
                                 </h3>
-                                <p className="mt-1 text-sm text-slate-400">
+                                <p className="mt-1 text-sm text-[var(--app-muted)]">
                                   {workspace.slug}
                                 </p>
                               </div>
                             </div>
                           </div>
 
-                          <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs text-slate-300">
+                          <span className="rounded-full border border-slate-200 bg-[var(--app-surface-2)] px-3 py-1 text-xs text-[var(--app-muted)]">
                             {workspace.plan || "free"}
                           </span>
                         </div>
 
                         <div className="mt-5 flex items-center justify-between">
-                          <div className="inline-flex items-center gap-2 text-xs text-slate-500">
+                          <div className="inline-flex items-center gap-2 text-xs text-[var(--app-muted)]">
                             <Clock3 className="size-4" />
                             Updated recently
                           </div>
 
                           <Link
                             href={`/workspaces/${workspace._id}`}
-                            className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 hover:text-white"
+                            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-medium text-[var(--app-text)] transition hover:bg-[var(--app-surface-2)]"
                           >
                             Open
                             <ArrowUpRight className="size-4" />

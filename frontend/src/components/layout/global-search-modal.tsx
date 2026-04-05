@@ -115,7 +115,7 @@ export function GlobalSearchModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-start justify-center bg-black/70 px-4 pt-24 backdrop-blur-sm">
-      <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-800 bg-zinc-950 shadow-2xl">
+      <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-800 bg-[var(--app-surface)] shadow-2xl">
         <div className="border-b border-slate-800 p-4">
           <div className="relative">
             <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-500" />

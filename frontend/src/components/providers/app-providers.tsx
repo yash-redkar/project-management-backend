@@ -1,10 +1,12 @@
 "use client";
 
 import { Toaster } from "react-hot-toast";
+import { ThemeSync } from "./theme-sync";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
     <>
+      <ThemeSync />
       {children}
       <Toaster
         position="top-right"

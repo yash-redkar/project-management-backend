@@ -101,4 +101,42 @@ export const workspaceService = {
     );
     return res.data;
   },
+
+  async updateWorkspacePlan(
+    workspaceId: string,
+    payload: { plan: "free" | "pro" | "business" },
+  ) {
+    const res = await apiClient.put(
+      `/workspaces/${workspaceId}/billing/plan`,
+      payload,
+    );
+    return res.data;
+  },
+
+  async createWorkspaceBillingOrder(
+    workspaceId: string,
+    payload: { plan: "pro" | "business" },
+  ) {
+    const res = await apiClient.post(
+      `/workspaces/${workspaceId}/billing/order`,
+      payload,
+    );
+    return res.data;
+  },
+
+  async verifyWorkspaceBillingPayment(
+    workspaceId: string,
+    payload: {
+      plan: "pro" | "business";
+      razorpayOrderId: string;
+      razorpayPaymentId: string;
+      razorpaySignature: string;
+    },
+  ) {
+    const res = await apiClient.post(
+      `/workspaces/${workspaceId}/billing/verify`,
+      payload,
+    );
+    return res.data;
+  },
 };

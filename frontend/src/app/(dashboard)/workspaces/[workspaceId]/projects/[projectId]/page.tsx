@@ -297,21 +297,21 @@ export default function ProjectDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 text-white">
+      <div className="space-y-4 text-[var(--app-text)]">
         <h1 className="text-3xl font-semibold">Project</h1>
-        <p className="text-slate-400">Loading project details...</p>
+        <p className="text-[var(--app-muted)]">Loading project details...</p>
       </div>
     );
   }
 
   if (error || !projectItem) {
     return (
-      <div className="space-y-4 text-white">
+      <div className="space-y-4 text-[var(--app-text)]">
         <h1 className="text-3xl font-semibold">Project</h1>
         <p className="text-red-400">{error || "Project not found"}</p>
         <Link
           href="/workspaces"
-          className="inline-flex rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-200 transition hover:bg-slate-800"
+          className="inline-flex rounded-xl border border-slate-200 px-4 py-2 text-sm text-[var(--app-text)] transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
         >
           Back to Workspaces
         </Link>
@@ -368,7 +368,7 @@ export default function ProjectDetailsPage() {
             ref={provided.innerRef}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
-            className={`rounded-xl border border-slate-800 bg-slate-950/90 p-4 transition hover:border-slate-700 ${
+            className={`rounded-xl border border-slate-200 bg-[var(--app-surface)] p-4 transition hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700 ${
               snapshot.isDragging ? "shadow-lg ring-1 ring-cyan-400" : ""
             }`}
           >
@@ -377,7 +377,7 @@ export default function ProjectDetailsPage() {
               className="block"
             >
               <div className="flex items-start justify-between gap-3">
-                <h5 className="text-sm font-semibold text-white">
+                <h5 className="text-sm font-semibold text-[var(--app-text)]">
                   {task.title || "Untitled Task"}
                 </h5>
 
@@ -388,7 +388,7 @@ export default function ProjectDetailsPage() {
                 </span>
               </div>
 
-              <p className="mt-2 text-xs leading-5 text-slate-400">
+              <p className="mt-2 text-xs leading-5 text-[var(--app-muted)]">
                 {task.description || "No description"}
               </p>
             </Link>
@@ -400,19 +400,19 @@ export default function ProjectDetailsPage() {
 
   return (
     <>
-      <div className="space-y-6 text-white">
-        <div className="flex flex-col gap-4 border-b border-slate-800 pb-6 sm:flex-row sm:items-start sm:justify-between">
+      <div className="space-y-6 text-[var(--app-text)]">
+        <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between dark:border-slate-800">
           <div>
-            <h1 className="text-3xl font-semibold text-white">
+            <h1 className="text-3xl font-semibold text-[var(--app-text)]">
               {project.name || "Untitled Project"}
             </h1>
 
-            <p className="mt-2 text-sm text-slate-400">
+            <p className="mt-2 text-sm text-[var(--app-muted)]">
               {project.description ||
                 "Project details, tasks, members, and pending invites."}
             </p>
 
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-[var(--app-muted)]">
               <span>Workspace: {workspaceName || "Unknown"}</span>
               <span>•</span>
               <span className="capitalize">Role: {role}</span>
@@ -424,7 +424,7 @@ export default function ProjectDetailsPage() {
           <div className="flex flex-wrap items-center gap-3">
             <Link
               href={`/workspaces/${workspaceId}`}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-200 transition hover:bg-slate-800"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2 text-sm text-[var(--app-text)] transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
             >
               Back
             </Link>
@@ -440,47 +440,47 @@ export default function ProjectDetailsPage() {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-            <p className="text-sm text-slate-400">Project Name</p>
+          <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 dark:border-slate-800">
+            <p className="text-sm text-[var(--app-muted)]">Project Name</p>
             <p className="mt-3 text-xl font-semibold">
               {project.name || "Untitled Project"}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-            <p className="text-sm text-slate-400">Workspace</p>
+          <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 dark:border-slate-800">
+            <p className="text-sm text-[var(--app-muted)]">Workspace</p>
             <p className="mt-3 text-xl font-semibold">
               {workspaceName || "Unknown"}
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-            <p className="text-sm text-slate-400">Your Role</p>
+          <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 dark:border-slate-800">
+            <p className="text-sm text-[var(--app-muted)]">Your Role</p>
             <p className="mt-3 text-xl font-semibold capitalize">{role}</p>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-            <p className="text-sm text-slate-400">Members</p>
+          <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 dark:border-slate-800">
+            <p className="text-sm text-[var(--app-muted)]">Members</p>
             <p className="mt-3 text-xl font-semibold">{members.length}</p>
           </div>
         </div>
 
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-          <h2 className="text-2xl font-semibold text-white">
+        <div className="rounded-3xl border border-slate-200 bg-[var(--app-surface)] p-6 dark:border-slate-800">
+          <h2 className="text-2xl font-semibold text-[var(--app-text)]">
             Project Overview
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-[var(--app-muted)]">
             Manage tasks, members, invites, and activity for this project.
           </p>
 
           <div className="mt-6 space-y-5">
-            <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+            <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] p-5 dark:border-slate-800">
               <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h3 className="text-xl font-semibold text-white">
+                  <h3 className="text-xl font-semibold text-[var(--app-text)]">
                     Kanban Board
                   </h3>
-                  <p className="mt-1 text-sm text-slate-400">
+                  <p className="mt-1 text-sm text-[var(--app-muted)]">
                     Drag tasks across workflow status.
                   </p>
                 </div>
@@ -494,7 +494,9 @@ export default function ProjectDetailsPage() {
               </div>
 
               {isUpdatingTask ? (
-                <p className="mb-4 text-sm text-cyan-300">Updating task...</p>
+                <p className="mb-4 text-sm text-cyan-600 dark:text-cyan-300">
+                  Updating task...
+                </p>
               ) : null}
 
               <DragDropContext onDragEnd={onDragEnd}>
@@ -504,25 +506,27 @@ export default function ProjectDetailsPage() {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`rounded-2xl border border-slate-800 bg-slate-900/50 p-4 ${
-                          snapshot.isDraggingOver ? "ring-1 ring-slate-500" : ""
+                        className={`rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-4 ${
+                          snapshot.isDraggingOver
+                            ? "ring-1 ring-slate-300 dark:ring-slate-500"
+                            : ""
                         }`}
                       >
                         <div className="mb-4 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="h-2.5 w-2.5 rounded-full bg-slate-400" />
-                            <h4 className="text-sm font-semibold text-white">
+                            <h4 className="text-sm font-semibold text-[var(--app-text)]">
                               Todo
                             </h4>
                           </div>
-                          <span className="rounded-full border border-slate-700 bg-slate-950 px-2.5 py-1 text-xs text-slate-300">
+                          <span className="rounded-full border border-slate-200 bg-[var(--app-surface-2)] px-2.5 py-1 text-xs text-[var(--app-text)] dark:border-slate-800 dark:text-slate-300">
                             {groupedTasks.todo.length}
                           </span>
                         </div>
 
                         <div className="space-y-3">
                           {groupedTasks.todo.length === 0 ? (
-                            <div className="rounded-xl border border-dashed border-slate-700 p-4 text-sm text-slate-500">
+                            <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-[var(--app-muted)] dark:border-slate-700">
                               No todo tasks
                             </div>
                           ) : (
@@ -539,27 +543,27 @@ export default function ProjectDetailsPage() {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`rounded-2xl border border-slate-800 bg-slate-900/50 p-4 ${
+                        className={`rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-4 ${
                           snapshot.isDraggingOver
-                            ? "ring-1 ring-yellow-400"
+                            ? "ring-1 ring-yellow-300 dark:ring-yellow-400"
                             : ""
                         }`}
                       >
                         <div className="mb-4 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-                            <h4 className="text-sm font-semibold text-white">
+                            <h4 className="text-sm font-semibold text-[var(--app-text)]">
                               In Progress
                             </h4>
                           </div>
-                          <span className="rounded-full border border-slate-700 bg-slate-950 px-2.5 py-1 text-xs text-slate-300">
+                          <span className="rounded-full border border-slate-200 bg-[var(--app-surface-2)] px-2.5 py-1 text-xs text-[var(--app-text)] dark:border-slate-800 dark:text-slate-300">
                             {groupedTasks.inProgress.length}
                           </span>
                         </div>
 
                         <div className="space-y-3">
                           {groupedTasks.inProgress.length === 0 ? (
-                            <div className="rounded-xl border border-dashed border-slate-700 p-4 text-sm text-slate-500">
+                            <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-[var(--app-muted)] dark:border-slate-700">
                               No in-progress tasks
                             </div>
                           ) : (
@@ -576,25 +580,27 @@ export default function ProjectDetailsPage() {
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`rounded-2xl border border-slate-800 bg-slate-900/50 p-4 ${
-                          snapshot.isDraggingOver ? "ring-1 ring-green-400" : ""
+                        className={`rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-4 ${
+                          snapshot.isDraggingOver
+                            ? "ring-1 ring-green-300 dark:ring-green-400"
+                            : ""
                         }`}
                       >
                         <div className="mb-4 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
-                            <h4 className="text-sm font-semibold text-white">
+                            <h4 className="text-sm font-semibold text-[var(--app-text)]">
                               Done
                             </h4>
                           </div>
-                          <span className="rounded-full border border-slate-700 bg-slate-950 px-2.5 py-1 text-xs text-slate-300">
+                          <span className="rounded-full border border-slate-200 bg-[var(--app-surface-2)] px-2.5 py-1 text-xs text-[var(--app-text)] dark:border-slate-800 dark:text-slate-300">
                             {groupedTasks.done.length}
                           </span>
                         </div>
 
                         <div className="space-y-3">
                           {groupedTasks.done.length === 0 ? (
-                            <div className="rounded-xl border border-dashed border-slate-700 p-4 text-sm text-slate-500">
+                            <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-[var(--app-muted)] dark:border-slate-700">
                               No completed tasks
                             </div>
                           ) : (
@@ -610,13 +616,13 @@ export default function ProjectDetailsPage() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+              <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] p-5 dark:border-slate-800">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-[var(--app-text)]">
                       Members
                     </h3>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-[var(--app-muted)]">
                       Manage project members and access.
                     </p>
                   </div>
@@ -632,12 +638,12 @@ export default function ProjectDetailsPage() {
                 </div>
 
                 <div className="mt-5">
-                  <h4 className="text-sm font-semibold text-white">
+                  <h4 className="text-sm font-semibold text-[var(--app-text)]">
                     Current Members ({members.length})
                   </h4>
 
                   {members.length === 0 ? (
-                    <p className="mt-3 text-sm text-slate-400">
+                    <p className="mt-3 text-sm text-[var(--app-muted)]">
                       No members found in this project.
                     </p>
                   ) : (
@@ -666,7 +672,7 @@ export default function ProjectDetailsPage() {
                         return (
                           <div
                             key={user?._id || index}
-                            className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-slate-700"
+                            className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-4 transition hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700"
                           >
                             <div className="flex items-start gap-4">
                               <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -675,7 +681,7 @@ export default function ProjectDetailsPage() {
                                 </div>
 
                                 <div className="min-w-0">
-                                  <p className="truncate text-sm font-semibold text-white">
+                                  <p className="truncate text-sm font-semibold text-[var(--app-text)]">
                                     {displayName}
                                     {isSelf && (
                                       <span className="ml-2 text-xs text-cyan-400">
@@ -684,11 +690,11 @@ export default function ProjectDetailsPage() {
                                     )}
                                   </p>
 
-                                  <p className="truncate text-xs text-slate-400">
+                                  <p className="truncate text-xs text-[var(--app-muted)]">
                                     {email}
                                   </p>
 
-                                  <p className="mt-1 text-xs text-slate-500">
+                                  <p className="mt-1 text-xs text-[var(--app-muted)]">
                                     Joined: {joinedAt}
                                   </p>
                                 </div>
@@ -731,16 +737,16 @@ export default function ProjectDetailsPage() {
                                           );
                                         }
                                       }}
-                                      className="appearance-none rounded-full border border-slate-700 bg-zinc-950 py-1 pl-3 pr-8 text-[11px] capitalize text-slate-300 outline-none transition hover:border-slate-600"
+                                      className="appearance-none rounded-full border border-slate-200 bg-[var(--app-surface-2)] py-1 pl-3 pr-8 text-[11px] capitalize text-[var(--app-text)] outline-none transition hover:border-slate-300 dark:border-slate-800 dark:text-slate-300 dark:hover:border-slate-600"
                                     >
                                       <option value="member">Member</option>
                                       <option value="admin">Admin</option>
                                     </select>
 
-                                    <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3 -translate-y-1/2 text-slate-500" />
+                                    <ChevronDown className="pointer-events-none absolute right-2 top-1/2 size-3 -translate-y-1/2 text-[var(--app-muted)]" />
                                   </div>
                                 ) : (
-                                  <span className="rounded-full border border-slate-700 bg-zinc-950 px-3 py-1 text-[11px] capitalize text-slate-300">
+                                  <span className="rounded-full border border-slate-200 bg-[var(--app-surface-2)] px-3 py-1 text-[11px] capitalize text-[var(--app-text)] dark:border-slate-800 dark:text-slate-300">
                                     {memberRole}
                                   </span>
                                 )}
@@ -784,7 +790,7 @@ export default function ProjectDetailsPage() {
                                       );
                                     }
                                   }}
-                                  className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs text-red-300 transition hover:bg-red-500/20"
+                                  className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1 text-xs text-red-700 transition hover:bg-red-500/20 dark:text-red-300"
                                 >
                                   Remove
                                 </button>
@@ -799,12 +805,12 @@ export default function ProjectDetailsPage() {
 
                 {isProjectAdmin && (
                   <div className="mt-6">
-                    <h4 className="text-sm font-semibold text-white">
+                    <h4 className="text-sm font-semibold text-[var(--app-text)]">
                       Pending Invites ({pendingInvites.length})
                     </h4>
 
                     {pendingInvites.length === 0 ? (
-                      <p className="mt-3 text-sm text-slate-400">
+                      <p className="mt-3 text-sm text-[var(--app-muted)]">
                         No pending invites.
                       </p>
                     ) : (
@@ -843,32 +849,32 @@ export default function ProjectDetailsPage() {
                           return (
                             <div
                               key={invite._id || index}
-                              className="rounded-xl border border-slate-800 bg-slate-900/60 p-4"
+                              className="rounded-xl border border-slate-200 bg-[var(--app-surface)] p-4 dark:border-slate-800"
                             >
                               <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <p className="truncate text-sm font-semibold text-white">
+                                  <p className="truncate text-sm font-semibold text-[var(--app-text)]">
                                     {inviteUserName || email}
                                   </p>
 
                                   {inviteUserName && (
-                                    <p className="mt-1 text-xs text-slate-400">
+                                    <p className="mt-1 text-xs text-[var(--app-muted)]">
                                       {email}
                                     </p>
                                   )}
 
-                                  <p className="mt-1 text-xs text-slate-400">
+                                  <p className="mt-1 text-xs text-[var(--app-muted)]">
                                     Role:{" "}
                                     <span className="capitalize">
                                       {inviteRole}
                                     </span>
                                   </p>
 
-                                  <p className="mt-1 text-xs text-slate-500">
+                                  <p className="mt-1 text-xs text-[var(--app-muted)]">
                                     Invited by: {invitedBy}
                                   </p>
 
-                                  <p className="mt-1 text-xs text-slate-500">
+                                  <p className="mt-1 text-xs text-[var(--app-muted)]">
                                     Expires: {expiresAt}
                                   </p>
                                 </div>
@@ -909,7 +915,7 @@ export default function ProjectDetailsPage() {
                                       );
                                     }
                                   }}
-                                  className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:bg-slate-800"
+                                  className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-[var(--app-text)] transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
                                 >
                                   Resend
                                 </button>
@@ -949,7 +955,7 @@ export default function ProjectDetailsPage() {
                                       );
                                     }
                                   }}
-                                  className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-500/20"
+                                  className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-700 transition hover:bg-red-500/20 dark:text-red-300"
                                 >
                                   Cancel
                                 </button>
@@ -963,20 +969,20 @@ export default function ProjectDetailsPage() {
                 )}
               </div>
 
-              <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+              <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] p-5 dark:border-slate-800">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">
+                    <h3 className="text-lg font-semibold text-[var(--app-text)]">
                       Recent Activity
                     </h3>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-[var(--app-muted)]">
                       Latest updates from this project.
                     </p>
                   </div>
 
                   <Link
                     href={`/workspaces/${workspaceId}/activity`}
-                    className="shrink-0 rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:bg-slate-800"
+                    className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-[var(--app-text)] transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
                   >
                     View all
                   </Link>
@@ -984,17 +990,17 @@ export default function ProjectDetailsPage() {
 
                 <div className="mt-4 space-y-3">
                   {activities.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-slate-700 p-4 text-sm text-slate-500">
+                    <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-[var(--app-muted)] dark:border-slate-700">
                       No activity yet
                     </div>
                   ) : (
                     activities.map((activity: any, index: number) => (
                       <div
                         key={activity._id || index}
-                        className="rounded-xl border border-slate-800 bg-slate-950/70 p-4 transition hover:border-slate-700"
+                        className="rounded-xl border border-slate-200 bg-[var(--app-surface)] p-4 transition hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700"
                       >
-                        <p className="text-sm leading-6 text-slate-200">
-                          <span className="font-semibold text-white">
+                        <p className="text-sm leading-6 text-[var(--app-text)]">
+                          <span className="font-semibold text-[var(--app-text)]">
                             {activity.actor?.username || "Someone"}
                           </span>{" "}
                           {String(activity.message || "").replace(/_/g, " ")}
@@ -1002,7 +1008,7 @@ export default function ProjectDetailsPage() {
 
                         <div className="mt-2 flex flex-wrap items-center gap-2">
                           {activity.project?.name ? (
-                            <span className="rounded-full border border-slate-700 bg-slate-900 px-2.5 py-1 text-[11px] text-slate-300">
+                            <span className="rounded-full border border-slate-200 bg-[var(--app-surface-2)] px-2.5 py-1 text-[11px] text-[var(--app-text)] dark:border-slate-800 dark:text-slate-300">
                               Project: {activity.project.name}
                             </span>
                           ) : null}
@@ -1014,13 +1020,13 @@ export default function ProjectDetailsPage() {
                           ) : null}
 
                           {activity.entityType ? (
-                            <span className="rounded-full border border-slate-700 bg-zinc-950 px-2.5 py-1 text-[11px] capitalize text-slate-400">
+                            <span className="rounded-full border border-slate-200 bg-[var(--app-surface-2)] px-2.5 py-1 text-[11px] capitalize text-[var(--app-muted)] dark:border-slate-800 dark:text-slate-400">
                               {activity.entityType}
                             </span>
                           ) : null}
                         </div>
 
-                        <p className="mt-3 text-xs text-slate-500">
+                        <p className="mt-3 text-xs text-[var(--app-muted)]">
                           {formatDateTime(activity.createdAt)}
                         </p>
                       </div>

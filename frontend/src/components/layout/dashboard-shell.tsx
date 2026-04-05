@@ -5,11 +5,13 @@ import { AppNavbar } from "./app-navbar";
 import { AppSidebar } from "./app-sidebar";
 import { MobileSidebarDrawer } from "./mobile-sidebar-drawer";
 import { GlobalSearchModal } from "./global-search-modal";
+import { AiAssistantModal } from "./ai-assistant-modal";
 import { useAuth } from "@/context/auth-context";
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
 
   const { user, isLoading } = useAuth();
 
@@ -20,8 +22,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         setSearchOpen(true);
       }
 
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "j") {
+        event.preventDefault();
+        setAssistantOpen(true);
+      }
+
       if (event.key === "Escape") {
         setSearchOpen(false);
+        setAssistantOpen(false);
       }
     };
 
@@ -30,7 +38,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-slate-100">
+    <div className="min-h-screen bg-[var(--app-bg)] text-[var(--app-text)]">
       <AppSidebar
         className="fixed inset-y-0 left-0 z-30 hidden w-72 lg:flex"
         user={user}
@@ -47,10 +55,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         onClose={() => setSearchOpen(false)}
       />
 
+      <AiAssistantModal
+        isOpen={assistantOpen}
+        onClose={() => setAssistantOpen(false)}
+      />
+
       <div className="lg:pl-72">
         <AppNavbar
           onOpenSidebar={() => setMobileSidebarOpen(true)}
           onOpenSearch={() => setSearchOpen(true)}
+          onOpenAssistant={() => setAssistantOpen(true)}
           user={user}
         />
 

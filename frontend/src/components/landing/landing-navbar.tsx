@@ -5,7 +5,14 @@ export function LandingNavbar() {
     <header className="sticky top-0 z-30 border-b border-white/10 bg-zinc-950/70 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 via-violet-500 to-cyan-400 text-lg font-bold text-white shadow-lg">
+          <div
+            className="flex h-11 w-11 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.28)]"
+            style={{
+              backgroundColor: "#0ea5e9",
+              backgroundImage:
+                "linear-gradient(135deg, #06b6d4 0%, #2563eb 100%)",
+            }}
+          >
             T
           </div>
           <div>

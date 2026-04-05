@@ -6,6 +6,10 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { UserMenu } from "./user-menu";
 import { notificationService } from "@/services/notification.service";
+import {
+  getPrimaryUnreadChatTarget,
+  getTotalUnreadCount,
+} from "@/lib/chat-unread";
 
 function getPageTitle(pathname: string) {
   if (pathname === "/dashboard") return "Dashboard";
@@ -154,17 +158,37 @@ function getNotificationBadgeClass(type: string, message: string) {
 export function AppNavbar({
   onOpenSidebar,
   onOpenSearch,
+  onOpenAssistant,
   user,
 }: {
   onOpenSidebar: () => void;
   onOpenSearch: () => void;
+  onOpenAssistant: () => void;
   user: any;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const pageTitle = getPageTitle(pathname);
 
+  const getWorkspaceIdForProjectCreation = () => {
+    const workspaceMatch = pathname.match(/^\/workspaces\/([^/]+)/);
+    const fromPath = workspaceMatch?.[1];
+
+    if (fromPath) return fromPath;
+
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("teamforge_active_workspace_id") || "";
+    }
+
+    return "";
+  };
+
   const [notificationUnreadCount, setNotificationUnreadCount] = useState(0);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
+  const [chatUnreadTargetHref, setChatUnreadTargetHref] =
+    useState("/workspaces");
+  const [chatUnreadTargetLabel, setChatUnreadTargetLabel] =
+    useState("New chat messages");
   const [notifications, setNotifications] = useState<any[]>([]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
@@ -237,6 +261,38 @@ export function AppNavbar({
   }, []);
 
   useEffect(() => {
+    const syncChatUnread = () => {
+      setChatUnreadCount(getTotalUnreadCount());
+
+      const target = getPrimaryUnreadChatTarget();
+      if (target?.href) {
+        setChatUnreadTargetHref(target.href);
+      } else {
+        setChatUnreadTargetHref("/workspaces");
+      }
+
+      if (target?.label) {
+        setChatUnreadTargetLabel(target.label);
+      } else {
+        setChatUnreadTargetLabel("New chat messages");
+      }
+    };
+
+    syncChatUnread();
+
+    window.addEventListener("storage", syncChatUnread);
+    window.addEventListener("teamforge-chat-unread-updated", syncChatUnread);
+
+    return () => {
+      window.removeEventListener("storage", syncChatUnread);
+      window.removeEventListener(
+        "teamforge-chat-unread-updated",
+        syncChatUnread,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
       if (
         notificationsRef.current &&
@@ -287,8 +343,21 @@ export function AppNavbar({
     }
   };
 
+  const totalUnreadBadgeCount = notificationUnreadCount + chatUnreadCount;
+
+  const handleNewProjectClick = () => {
+    const workspaceId = getWorkspaceIdForProjectCreation();
+
+    if (workspaceId) {
+      router.push(`/workspaces/${workspaceId}/projects`);
+      return;
+    }
+
+    router.push("/workspaces");
+  };
+
   return (
-    <header className="sticky top-0 z-20 border-b border-slate-800 bg-zinc-950/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-20 border-b border-slate-800 bg-[var(--app-surface)] backdrop-blur-xl">
       <div className="px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -322,12 +391,19 @@ export function AppNavbar({
               </div>
             </button>
 
-            <button className="hidden items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 md:inline-flex">
+            <button
+              onClick={onOpenAssistant}
+              className="hidden items-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800 md:inline-flex"
+            >
               <Sparkles className="size-4 text-violet-400" />
               AI Assistant
             </button>
 
-            <button className="rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-500 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-cyan-500/10 transition hover:brightness-110">
+            <button
+              type="button"
+              onClick={handleNewProjectClick}
+              className="rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-500 px-4 py-2.5 text-sm font-medium text-white shadow-lg shadow-cyan-500/10 transition hover:brightness-110"
+            >
               + New Project
             </button>
 
@@ -338,8 +414,10 @@ export function AppNavbar({
                 aria-label="Notifications"
               >
                 <Bell className="size-5" />
-                {notificationUnreadCount > 0 ? (
-                  <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-cyan-400 ring-2 ring-zinc-950" />
+                {totalUnreadBadgeCount > 0 ? (
+                  <span className="absolute -right-1 -top-1 min-w-[18px] rounded-full bg-cyan-500 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white ring-2 ring-zinc-950">
+                    {totalUnreadBadgeCount > 99 ? "99+" : totalUnreadBadgeCount}
+                  </span>
                 ) : null}
               </button>
 
@@ -350,6 +428,40 @@ export function AppNavbar({
                       Notifications
                     </h3>
                   </div>
+
+                  {chatUnreadCount > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsNotificationsOpen(false);
+                        router.push(chatUnreadTargetHref);
+                      }}
+                      className="mb-1 flex w-full items-start gap-3 rounded-xl px-3 py-3 text-left transition hover:bg-slate-900/70"
+                    >
+                      <div className="relative shrink-0">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-sm font-semibold text-white">
+                          CH
+                        </div>
+
+                        <div className="absolute -bottom-0.5 -right-0.5 h-4 w-4 rounded-full bg-cyan-500/20" />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-white">
+                          {chatUnreadTargetLabel}
+                        </p>
+
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="text-xs text-slate-500">
+                            Just now
+                          </span>
+                          <span className="text-xs font-medium text-slate-300">
+                            +{chatUnreadCount > 99 ? "99" : chatUnreadCount}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  ) : null}
 
                   <div className="space-y-1">
                     {isLoadingNotifications ? (

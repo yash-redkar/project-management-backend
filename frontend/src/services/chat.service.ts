@@ -15,6 +15,24 @@ export const chatService = {
     return res.data;
   },
 
+  async getProjectDirectConversations(workspaceId: string, projectId: string) {
+    const res = await apiClient.get(
+      `/chat/workspaces/${workspaceId}/projects/${projectId}/direct-conversations`,
+    );
+    return res.data;
+  },
+
+  async getOrCreateProjectDirectConversation(
+    workspaceId: string,
+    projectId: string,
+    memberId: string,
+  ) {
+    const res = await apiClient.get(
+      `/chat/workspaces/${workspaceId}/projects/${projectId}/direct-conversations/${memberId}`,
+    );
+    return res.data;
+  },
+
   async getConversationMessages(
     conversationId: string,
     options?: {

@@ -899,18 +899,18 @@ export default function TaskDetailsPage() {
 
   return (
     <div className="space-y-6 text-white">
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+      <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-5 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-400">
               Task Details
             </p>
 
-            <h1 className="mt-3 text-4xl font-semibold tracking-tight text-white sm:text-5xl">
+            <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
               {task.title || "Untitled Task"}
             </h1>
 
-            <p className="mt-3 max-w-2xl text-base leading-7 text-slate-400">
+            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-400">
               Track progress, manage ownership, and collaborate on updates.
             </p>
           </div>
@@ -925,32 +925,32 @@ export default function TaskDetailsPage() {
           </div>
         </div>
 
-        <div className="mt-6 border-t border-slate-800 pt-6">
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+        <div className="mt-5 border-t border-slate-800 pt-5">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-4">
               <p className="text-sm text-slate-400">Task Title</p>
-              <p className="mt-3 text-xl font-semibold">
+              <p className="mt-2 text-lg font-semibold">
                 {task.title || "Untitled Task"}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+            <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-4">
               <p className="text-sm text-slate-400">Status</p>
-              <p className="mt-3 text-xl font-semibold">
+              <p className="mt-2 text-lg font-semibold">
                 {formatStatusLabel(task.status)}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+            <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-4">
               <p className="text-sm text-slate-400">Priority</p>
-              <p className="mt-3 text-xl font-semibold capitalize">
+              <p className="mt-2 text-lg font-semibold capitalize">
                 {task.priority || "medium"}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+            <div className="rounded-2xl border border-slate-800 bg-zinc-950/60 p-4">
               <p className="text-sm text-slate-400">Assignee</p>
-              <p className="mt-3 text-xl font-semibold">
+              <p className="mt-2 text-lg font-semibold">
                 {task.assignedTo?.username ||
                   task.assignedTo?.fullName ||
                   task.assignedTo?.fullname ||
@@ -986,7 +986,7 @@ export default function TaskDetailsPage() {
               </p>
             </div>
 
-            <div className="mt-8 rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+            <div className="mt-5 rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
               <h3 className="text-lg font-semibold text-white">
                 Update Status
               </h3>
@@ -998,7 +998,7 @@ export default function TaskDetailsPage() {
                 <select
                   value={statusValue}
                   onChange={(e) => setStatusValue(e.target.value)}
-                  className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-white outline-none"
+                  className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 pr-10 text-sm text-white outline-none"
                 >
                   <option value="todo">Todo</option>
                   <option value="in_progress">In Progress</option>
@@ -1015,7 +1015,7 @@ export default function TaskDetailsPage() {
               </div>
             </div>
 
-            <div className="mt-8 rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+            <div className="mt-5 rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
               <h3 className="text-lg font-semibold text-white">Assignee</h3>
               <p className="mt-2 text-sm text-slate-400">
                 Assign this task to a project member.
@@ -1026,7 +1026,7 @@ export default function TaskDetailsPage() {
                   value={selectedAssignee}
                   onChange={(e) => setSelectedAssignee(e.target.value)}
                   disabled={isMembersLoading}
-                  className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-white outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 pr-10 text-sm text-white outline-none disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <option value="">Unassigned</option>
                   {orderedMembers.map((member: any, index: number) => (
@@ -1057,7 +1057,7 @@ export default function TaskDetailsPage() {
               </p>
             </div>
 
-            <div className="mt-8 rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
+            <div className="mt-5 rounded-2xl border border-slate-800 bg-zinc-950/60 p-5">
               <h3 className="text-lg font-semibold text-white">Comments</h3>
               <p className="mt-2 text-sm text-slate-400">
                 Discuss updates and collaboration on this task.

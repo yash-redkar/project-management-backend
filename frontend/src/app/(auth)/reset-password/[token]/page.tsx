@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { parseApiResponse } from "@/lib/response";
 
 export default function ResetPasswordPage() {
   const params = useParams();
@@ -41,14 +42,14 @@ export default function ResetPasswordPage() {
         },
       );
 
-      const data = await res.json();
+      const data = await parseApiResponse(res);
       console.log("Reset password response:", data);
 
       if (res.ok) {
-        toast.success(data.message || "Password reset successful");
+        toast.success(data?.message || "Password reset successful");
         router.push("/login");
       } else {
-        toast.error(data.message || "Failed to reset password");
+        toast.error(data?.message || "Failed to reset password");
       }
     } catch (err) {
       console.error("Reset password error:", err);

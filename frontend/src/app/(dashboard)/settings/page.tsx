@@ -29,6 +29,8 @@ import { authService } from "@/services/auth.service";
 import { workspaceService } from "@/services/workspace.service";
 import { projectService } from "@/services/project.service";
 import { InviteWorkspaceMemberModal } from "@/components/workspace/invite-workspace-member-modal";
+import { ThemeToggleSwitch } from "@/components/ui/theme-toggle-switch";
+import { applyThemePreference } from "@/lib/theme";
 
 type SettingsSection =
   | "profile"
@@ -138,43 +140,17 @@ function splitFullName(fullName?: string) {
 }
 
 function inputClass(disabled = false) {
-  return `h-12 w-full rounded-2xl border border-slate-800 bg-slate-950/70 px-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 ${
+  return `h-12 w-full rounded-2xl border border-slate-800 bg-[var(--app-surface)] px-4 text-sm text-[var(--app-text)] outline-none transition placeholder:text-[var(--app-muted)] focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 ${
     disabled ? "cursor-not-allowed opacity-70" : ""
   }`;
 }
 
 function selectClass() {
-  return "h-12 w-full rounded-2xl border border-slate-800 bg-slate-950/70 px-4 text-sm text-white outline-none transition focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10";
+  return "h-12 w-full rounded-2xl border border-slate-800 bg-[var(--app-surface)] px-4 text-sm text-[var(--app-text)] outline-none transition focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10";
 }
 
 function cardClass() {
-  return "rounded-[28px] border border-slate-800/90 bg-[linear-gradient(180deg,rgba(8,15,30,0.95),rgba(4,10,22,0.98))] shadow-[0_20px_60px_rgba(0,0,0,0.35)]";
-}
-
-function Toggle({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className={`relative h-7 w-12 rounded-full transition ${
-        checked
-          ? "bg-gradient-to-r from-cyan-500 to-indigo-500"
-          : "bg-slate-800"
-      }`}
-    >
-      <span
-        className={`absolute top-1 h-5 w-5 rounded-full bg-white transition ${
-          checked ? "left-6" : "left-1"
-        }`}
-      />
-    </button>
-  );
+  return "rounded-[28px] border border-slate-800/90 bg-[var(--app-surface)] shadow-[0_20px_60px_rgba(0,0,0,0.35)]";
 }
 
 function SettingsNavButton({
@@ -335,6 +311,9 @@ export default function SettingsPage() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [billingSummary, setBillingSummary] = useState<any>(null);
   const [isBillingLoading, setIsBillingLoading] = useState(false);
+  const [isUpdatingPlan, setIsUpdatingPlan] = useState(false);
+  const [isStartingCheckout, setIsStartingCheckout] = useState(false);
+  const [isConfirmingCheckout, setIsConfirmingCheckout] = useState(false);
 
   const loadCurrentUser = async () => {
     try {
@@ -452,6 +431,39 @@ export default function SettingsPage() {
     } finally {
       setIsBillingLoading(false);
     }
+  };
+
+  const ensureRazorpayScript = () => {
+    return new Promise<boolean>((resolve) => {
+      if (typeof window === "undefined") {
+        resolve(false);
+        return;
+      }
+
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+
+      const existing = document.getElementById("razorpay-checkout-js");
+      if (existing) {
+        existing.addEventListener("load", () => resolve(true), {
+          once: true,
+        });
+        existing.addEventListener("error", () => resolve(false), {
+          once: true,
+        });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.id = "razorpay-checkout-js";
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
   };
 
   useEffect(() => {
@@ -618,7 +630,126 @@ export default function SettingsPage() {
       "teamforge_appearance_preferences",
       JSON.stringify(appearancePrefs),
     );
+    applyThemePreference(appearancePrefs.theme as any);
     toast.success("Appearance preferences saved locally");
+  };
+
+  const handlePlanCheckout = async (plan: "free" | "pro" | "business") => {
+    const activeWorkspaceId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("teamforge_active_workspace_id") || ""
+        : "";
+
+    if (!activeWorkspaceId) {
+      toast.error("Select a workspace first");
+      return;
+    }
+
+    try {
+      if (plan === "free") {
+        setIsUpdatingPlan(true);
+        const res = await workspaceService.updateWorkspacePlan(
+          activeWorkspaceId,
+          { plan: "free" },
+        );
+
+        setBillingSummary(res?.data || null);
+        await loadTeamData();
+        toast.success("Workspace switched to free plan");
+        return;
+      }
+
+      setIsStartingCheckout(true);
+      const scriptReady = await ensureRazorpayScript();
+
+      if (!scriptReady) {
+        toast.error("Unable to load Razorpay checkout");
+        return;
+      }
+
+      const res = await workspaceService.createWorkspaceBillingOrder(
+        activeWorkspaceId,
+        { plan },
+      );
+
+      const order = res?.data;
+      const razorpayKeyId = order?.keyId;
+
+      if (!order?.orderId || !razorpayKeyId) {
+        toast.error("Unable to start payment");
+        return;
+      }
+
+      const Razorpay = (window as any).Razorpay;
+      const razorpay = new Razorpay({
+        key: razorpayKeyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: order.workspaceName || "TeamForge",
+        description: `${plan} plan subscription`,
+        order_id: order.orderId,
+
+        prefill: {
+          name:
+            order.customerName ||
+            user?.fullName ||
+            user?.username ||
+            "TeamForge User",
+          email: order.customerEmail || user?.email || "",
+        },
+
+        theme: {
+          color: "#0ea5e9",
+        },
+
+        handler: async (response: any) => {
+          try {
+            setIsConfirmingCheckout(true);
+
+            await workspaceService.verifyWorkspaceBillingPayment(
+              activeWorkspaceId,
+              {
+                plan,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+              },
+            );
+
+            toast.success("Payment successful 🚀");
+            await loadBillingData();
+          } catch (error: any) {
+            toast.error("Payment verification failed");
+          } finally {
+            setIsConfirmingCheckout(false);
+          }
+        },
+
+        modal: {
+          ondismiss: () => {
+            toast("Payment cancelled");
+          },
+        },
+      });
+      razorpay.on("payment.failed", function (response: any) {
+        console.log("Payment failed:", response);
+
+        const reason =
+          response?.error?.description ||
+          response?.error?.reason ||
+          "Payment failed";
+
+        toast.error(reason);
+      });
+
+      razorpay.open();
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Failed to update plan");
+    } finally {
+      setIsUpdatingPlan(false);
+      setIsStartingCheckout(false);
+    }
   };
 
   const handleNotificationSave = () => {
@@ -1141,6 +1272,34 @@ export default function SettingsPage() {
         ? Math.min(100, Math.round((memberCount / maxMembers) * 100))
         : 0;
 
+    const billingPlans = [
+      {
+        id: "free",
+        label: "Free",
+        price: "$0",
+        description: "For lightweight use and early projects.",
+        features: ["10 projects", "10 members", "Core workspace tools"],
+      },
+      {
+        id: "pro",
+        label: "Pro",
+        price: "$19",
+        description: "For growing teams that need more room.",
+        features: ["50 projects", "25 members", "Priority collaboration"],
+      },
+      {
+        id: "business",
+        label: "Business",
+        price: "$49",
+        description: "For larger teams and broader operations.",
+        features: [
+          "Unlimited projects",
+          "Unlimited members",
+          "Billing controls",
+        ],
+      },
+    ] as const;
+
     return (
       <div className={`${cardClass()} p-6 sm:p-8`}>
         <div className="mb-8">
@@ -1172,13 +1331,87 @@ export default function SettingsPage() {
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => toast("Billing integration will be added later")}
-              className="rounded-2xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-5 py-3 text-sm font-semibold text-white transition hover:brightness-110"
-            >
-              Upgrade Plan
-            </button>
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/50 px-4 py-3 text-sm text-slate-300">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                Payment Gateway
+              </p>
+              <p className="mt-1 font-medium text-white">Razorpay Checkout</p>
+              <p className="mt-1 text-xs text-slate-400">
+                Paid plans activate after Razorpay verification.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {billingPlans.map((plan) => {
+              const active = workspacePlan === plan.id;
+
+              return (
+                <div
+                  key={plan.id}
+                  className={`rounded-2xl border p-5 transition ${
+                    active
+                      ? "border-cyan-500/30 bg-cyan-500/10"
+                      : "border-slate-800 bg-slate-950/50 hover:bg-slate-900/60"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-semibold text-white">
+                        {plan.label}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        {plan.description}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="text-xl font-semibold text-white">
+                        {plan.price}
+                      </p>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                        monthly
+                      </p>
+                    </div>
+                  </div>
+
+                  <ul className="mt-4 space-y-2 text-sm text-slate-300">
+                    {plan.features.map((feature) => (
+                      <li key={feature} className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-cyan-400" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button
+                    type="button"
+                    disabled={
+                      active ||
+                      isUpdatingPlan ||
+                      isStartingCheckout ||
+                      isConfirmingCheckout
+                    }
+                    onClick={() => handlePlanCheckout(plan.id)}
+                    className={`mt-5 w-full rounded-xl px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                      active
+                        ? "bg-slate-800 text-slate-300"
+                        : "bg-gradient-to-r from-cyan-500 to-indigo-500 text-white hover:brightness-110"
+                    }`}
+                  >
+                    {active
+                      ? "Current plan"
+                      : isStartingCheckout && plan.id !== "free"
+                        ? "Opening checkout..."
+                        : isUpdatingPlan && plan.id === "free"
+                          ? "Updating..."
+                          : plan.id === "free"
+                            ? "Switch to Free"
+                            : `Upgrade to ${plan.label}`}
+                  </button>
+                </div>
+              );
+            })}
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-3">
@@ -1209,54 +1442,59 @@ export default function SettingsPage() {
               </p>
             </div>
           </div>
-        </div>
 
-        <div className="mt-8 grid gap-5 lg:grid-cols-2">
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-5">
-            <div className="flex items-start gap-3">
-              <CreditCard className="mt-0.5 h-5 w-5 text-violet-300" />
-              <div>
-                <h4 className="text-lg font-semibold text-white">
-                  Payment Method
-                </h4>
-                <p className="text-sm text-slate-400">
-                  No payment method added
-                </p>
+          <div className="mt-6 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-5">
+              <div className="flex items-start gap-3">
+                <CreditCard className="mt-0.5 h-5 w-5 text-violet-300" />
+                <div>
+                  <h4 className="text-lg font-semibold text-white">
+                    Payment Setup
+                  </h4>
+                  <p className="text-sm text-slate-400">
+                    Razorpay Checkout handles card, UPI, and netbanking flows.
+                  </p>
+                </div>
               </div>
+
+              <p className="mt-4 text-xs text-slate-500">
+                No card is stored in this app. Payment is verified by Razorpay
+                before the plan is activated.
+              </p>
             </div>
-          </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-5">
-            <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-xs text-slate-400">
-                  <span>Projects</span>
-                  <span>
-                    {projectCount}/{maxProjects}
-                  </span>
+            <div className="rounded-2xl border border-slate-800 bg-slate-950/40 p-5">
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span>Projects</span>
+                    <span>
+                      {projectCount}/{maxProjects}
+                    </span>
+                  </div>
+
+                  <div className="h-2 rounded-full bg-slate-900">
+                    <div
+                      className="h-full bg-cyan-500"
+                      style={{ width: `${projectUsagePercent}%` }}
+                    />
+                  </div>
                 </div>
 
-                <div className="h-2 rounded-full bg-slate-900">
-                  <div
-                    className="h-full bg-cyan-500"
-                    style={{ width: `${projectUsagePercent}%` }}
-                  />
-                </div>
-              </div>
+                <div>
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span>Members</span>
+                    <span>
+                      {memberCount}/{maxMembers}
+                    </span>
+                  </div>
 
-              <div>
-                <div className="flex justify-between text-xs text-slate-400">
-                  <span>Members</span>
-                  <span>
-                    {memberCount}/{maxMembers}
-                  </span>
-                </div>
-
-                <div className="h-2 rounded-full bg-slate-900">
-                  <div
-                    className="h-full bg-indigo-500"
-                    style={{ width: `${memberUsagePercent}%` }}
-                  />
+                  <div className="h-2 rounded-full bg-slate-900">
+                    <div
+                      className="h-full bg-indigo-500"
+                      style={{ width: `${memberUsagePercent}%` }}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1578,7 +1816,7 @@ export default function SettingsPage() {
                           </p>
                         </div>
 
-                        <Toggle
+                        <ThemeToggleSwitch
                           checked={
                             notificationPrefs[
                               item.key as keyof typeof notificationPrefs
@@ -1629,7 +1867,7 @@ export default function SettingsPage() {
                           </p>
                         </div>
 
-                        <Toggle
+                        <ThemeToggleSwitch
                           checked={
                             notificationPrefs[
                               item.key as keyof typeof notificationPrefs
@@ -1705,12 +1943,13 @@ export default function SettingsPage() {
                         <button
                           key={option.id}
                           type="button"
-                          onClick={() =>
+                          onClick={() => {
                             setAppearancePrefs((prev) => ({
                               ...prev,
                               theme: option.id,
-                            }))
-                          }
+                            }));
+                            applyThemePreference(option.id as any);
+                          }}
                           className={`rounded-2xl border p-5 text-left transition ${
                             active
                               ? "border-cyan-500/40 bg-cyan-500/10"

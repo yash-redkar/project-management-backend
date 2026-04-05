@@ -33,7 +33,7 @@ export function AuthInput({
     <div>
       <label
         htmlFor={name}
-        className="mb-2 block text-sm font-medium text-slate-200"
+        className="mb-2 block text-sm font-medium text-[var(--app-text)]"
       >
         {label}
       </label>
@@ -46,14 +46,20 @@ export function AuthInput({
           placeholder={placeholder}
           value={value}
           onChange={onChange}
-          className="h-12 w-full rounded-2xl border border-slate-800 bg-slate-900/70 px-4 pr-12 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+          className="h-12 w-full rounded-2xl border px-4 pr-12 text-sm text-[var(--app-text)] placeholder:text-[var(--app-muted)] outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--app-muted) 28%, transparent)",
+            backgroundColor:
+              "color-mix(in srgb, var(--app-surface) 90%, rgb(56 189 248) 10%)",
+          }}
         />
 
         {isPasswordField && (
           <button
             type="button"
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-white"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--app-muted)] transition hover:text-[var(--app-text)]"
             aria-label={showPassword ? "Hide password" : "Show password"}
           >
             {showPassword ? (

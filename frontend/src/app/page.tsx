@@ -64,13 +64,32 @@ export default function LandingPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#050816] text-white">
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.10),transparent_22%),radial-gradient(circle_at_top_right,rgba(99,102,241,0.10),transparent_22%),linear-gradient(to_bottom,rgba(2,6,23,0.98),rgba(3,7,18,1))]" />
+    <main
+      className="relative isolate min-h-screen text-white"
+      style={{
+        backgroundColor:
+          "color-mix(in srgb, var(--app-bg) 92%, rgb(56 189 248) 8%)",
+      }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 8% 8%, rgba(56,189,248,0.22), transparent 32%), radial-gradient(circle at 92% 10%, rgba(59,130,246,0.18), transparent 28%), linear-gradient(to bottom, rgba(125,211,252,0.12), rgba(147,197,253,0.08))",
+        }}
+      />
 
-      <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-[#050816]/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 border-b border-slate-800/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-500 text-xl font-bold text-white shadow-[0_10px_30px_rgba(59,130,246,0.18)]">
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-2xl text-xl font-bold text-white shadow-[0_10px_28px_rgba(14,165,233,0.28)]"
+              style={{
+                backgroundColor: "#0ea5e9",
+                backgroundImage:
+                  "linear-gradient(135deg, #06b6d4 0%, #2563eb 100%)",
+              }}
+            >
               T
             </div>
             <div>
@@ -111,7 +130,7 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/register"
-              className="rounded-xl bg-gradient-to-r from-sky-500 to-indigo-500 px-5 py-2.5 text-sm font-medium text-white shadow-[0_10px_30px_rgba(59,130,246,0.16)] transition hover:brightness-105"
+              className="rounded-xl bg-linear-to-r from-sky-500 to-indigo-500 px-5 py-2.5 text-sm font-medium text-white shadow-[0_10px_30px_rgba(59,130,246,0.16)] transition hover:brightness-105"
             >
               Sign Up
             </Link>
@@ -125,7 +144,7 @@ export default function LandingPage() {
             <h1 className="text-5xl font-semibold leading-tight tracking-tight text-white sm:text-6xl lg:text-7xl">
               Manage Projects, Tasks & Teams
               <br />
-              <span className="bg-gradient-to-r from-sky-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-sky-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent">
                 in One Powerful Workspace
               </span>
             </h1>
@@ -138,7 +157,7 @@ export default function LandingPage() {
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <Link
                 href="/register"
-                className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-sky-500 to-indigo-500 px-7 py-4 text-base font-medium text-white shadow-[0_10px_30px_rgba(59,130,246,0.16)] transition hover:brightness-105"
+                className="inline-flex items-center gap-2 rounded-2xl bg-linear-to-r from-sky-500 to-indigo-500 px-7 py-4 text-base font-medium text-white shadow-[0_10px_30px_rgba(59,130,246,0.16)] transition hover:brightness-105"
               >
                 Get Started Free
                 <ArrowRight className="size-5" />
@@ -163,7 +182,7 @@ export default function LandingPage() {
             return (
               <div
                 key={feature.title}
-                className="rounded-[28px] border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-950/90 p-8 transition hover:border-slate-700"
+                className="rounded-[28px] border border-slate-800 bg-linear-to-br from-slate-900/80 to-slate-950/90 p-8 transition hover:border-slate-700"
               >
                 <div
                   className={`flex h-14 w-14 items-center justify-center rounded-2xl ${feature.iconStyle}`}
@@ -202,14 +221,14 @@ export default function LandingPage() {
             </p>
 
             <div className="mt-10 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[28px] border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-950/90 p-6">
+              <div className="rounded-[28px] border border-slate-800 bg-linear-to-br from-slate-900/80 to-slate-950/90 p-6">
                 <p className="text-5xl font-semibold text-white">3×</p>
                 <p className="mt-4 text-lg leading-8 text-slate-400">
                   Faster task tracking and execution visibility
                 </p>
               </div>
 
-              <div className="rounded-[28px] border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-950/90 p-6">
+              <div className="rounded-[28px] border border-slate-800 bg-linear-to-br from-slate-900/80 to-slate-950/90 p-6">
                 <p className="text-5xl font-semibold text-white">24/7</p>
                 <p className="mt-4 text-lg leading-8 text-slate-400">
                   Realtime collaboration across teams and projects
@@ -218,7 +237,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="rounded-[32px] border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-950/90 p-8">
+          <div className="rounded-[32px] border border-slate-800 bg-linear-to-br from-slate-900/80 to-slate-950/90 p-8">
             <div className="grid gap-5 sm:grid-cols-2">
               {benefits.map((item) => {
                 const Icon = item.icon;
@@ -262,7 +281,7 @@ export default function LandingPage() {
             return (
               <div
                 key={item.title}
-                className="rounded-[28px] border border-slate-800 bg-gradient-to-br from-slate-900/80 to-slate-950/90 p-7 text-center transition hover:border-slate-700"
+                className="rounded-[28px] border border-slate-800 bg-linear-to-br from-slate-900/80 to-slate-950/90 p-7 text-center transition hover:border-slate-700"
               >
                 <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-sky-500/15 bg-sky-500/10 text-sky-300">
                   <Icon className="size-7" />
@@ -283,7 +302,14 @@ export default function LandingPage() {
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 md:grid-cols-[1.3fr_1fr_1fr_1fr]">
           <div>
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-500 text-xl font-bold text-white">
+              <div
+                className="flex h-12 w-12 items-center justify-center rounded-2xl text-xl font-bold text-white shadow-[0_10px_24px_rgba(14,165,233,0.24)]"
+                style={{
+                  backgroundColor: "#0ea5e9",
+                  backgroundImage:
+                    "linear-gradient(135deg, #06b6d4 0%, #2563eb 100%)",
+                }}
+              >
                 T
               </div>
               <div>

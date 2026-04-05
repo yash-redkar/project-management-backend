@@ -299,11 +299,13 @@ export default function WorkspaceActivityPage() {
   const hasMore = visibleCount < filteredActivities.length;
 
   return (
-    <div className="space-y-6 text-white">
-      <div className="flex flex-col gap-4 border-b border-slate-800 pb-6 xl:flex-row xl:items-center xl:justify-between">
+    <div className="space-y-6 text-[var(--app-text)]">
+      <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 xl:flex-row xl:items-center xl:justify-between dark:border-slate-800">
         <div>
-          <h1 className="text-3xl font-semibold text-white">Activity</h1>
-          <p className="mt-2 text-sm text-slate-400">
+          <h1 className="text-3xl font-semibold text-[var(--app-text)]">
+            Activity
+          </h1>
+          <p className="mt-2 text-sm text-[var(--app-muted)]">
             Track what your team has been working on across this workspace.
           </p>
         </div>
@@ -316,7 +318,7 @@ export default function WorkspaceActivityPage() {
               placeholder="Search activity..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-11 w-full rounded-2xl border border-slate-800 bg-slate-950/70 pl-11 pr-4 text-sm text-white placeholder:text-slate-500 outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-700/30"
+              className="h-11 w-full rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] pl-11 pr-4 text-sm text-[var(--app-text)] placeholder:text-[var(--app-muted)] outline-none transition focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 dark:border-slate-800"
             />
           </div>
 
@@ -325,7 +327,7 @@ export default function WorkspaceActivityPage() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="h-11 appearance-none rounded-2xl border border-slate-800 bg-slate-950/70 pl-11 pr-10 text-sm text-white outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-700/30"
+              className="h-11 appearance-none rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] pl-11 pr-10 text-sm text-[var(--app-text)] outline-none transition focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 dark:border-slate-800"
             >
               <option value="all">All types</option>
               <option value="workspace">Workspace</option>
@@ -341,7 +343,7 @@ export default function WorkspaceActivityPage() {
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
-              className="h-11 appearance-none rounded-2xl border border-slate-800 bg-slate-950/70 pl-11 pr-10 text-sm text-white outline-none transition focus:border-slate-700 focus:ring-2 focus:ring-slate-700/30"
+              className="h-11 appearance-none rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] pl-11 pr-10 text-sm text-[var(--app-text)] outline-none transition focus:border-cyan-500/40 focus:ring-2 focus:ring-cyan-500/10 dark:border-slate-800"
             >
               <option value="all">All time</option>
               <option value="today">Today</option>
@@ -353,18 +355,18 @@ export default function WorkspaceActivityPage() {
       </div>
 
       {isLoading ? (
-        <div className="rounded-3xl border border-slate-800 bg-slate-900/60 p-8">
-          <div className="flex items-center gap-3 text-slate-300">
+        <div className="rounded-3xl border border-slate-200 bg-[var(--app-surface)] p-8 dark:border-slate-800">
+          <div className="flex items-center gap-3 text-[var(--app-text)]">
             <Loader2 className="h-5 w-5 animate-spin" />
             <span>Loading activity...</span>
           </div>
         </div>
       ) : filteredActivities.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-slate-800 bg-slate-950/40 px-6 py-14 text-center">
-          <h3 className="text-lg font-semibold text-white">
+        <div className="rounded-3xl border border-dashed border-slate-200 bg-[var(--app-surface)] px-6 py-14 text-center dark:border-slate-800">
+          <h3 className="text-lg font-semibold text-[var(--app-text)]">
             No activity found
           </h3>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-2 text-sm text-[var(--app-muted)]">
             Try a different search term or filter.
           </p>
         </div>
@@ -374,12 +376,14 @@ export default function WorkspaceActivityPage() {
             {Object.entries(groupedActivities).map(([date, items]) => (
               <div
                 key={date}
-                className="rounded-3xl border border-slate-800 bg-slate-950/55 p-5"
+                className="rounded-3xl border border-slate-200 bg-[var(--app-surface)] p-5 dark:border-slate-800"
               >
                 <div className="mb-4 flex items-center gap-3">
                   <span className="h-2.5 w-2.5 rounded-full bg-cyan-400" />
-                  <h2 className="text-base font-semibold text-white">{date}</h2>
-                  <span className="rounded-full border border-slate-800 bg-slate-900 px-2.5 py-1 text-xs font-medium text-slate-300">
+                  <h2 className="text-base font-semibold text-[var(--app-text)]">
+                    {date}
+                  </h2>
+                  <span className="rounded-full border border-slate-200 bg-[var(--app-surface-2)] px-2.5 py-1 text-xs font-medium text-[var(--app-text)] dark:border-slate-800">
                     {items.length} activities
                   </span>
                 </div>
@@ -406,9 +410,9 @@ export default function WorkspaceActivityPage() {
                     );
 
                     const content = (
-                      <div className="group flex items-start gap-4 rounded-2xl px-3 py-4 transition hover:bg-slate-900/45">
+                      <div className="group flex items-start gap-4 rounded-2xl px-3 py-4 transition hover:bg-slate-100 dark:hover:bg-slate-900/45">
                         <div className="relative shrink-0">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-700 bg-slate-800 text-sm font-semibold text-slate-200">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-[var(--app-surface-2)] text-sm font-semibold text-[var(--app-text)] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
                             {initials}
                           </div>
 
@@ -420,15 +424,18 @@ export default function WorkspaceActivityPage() {
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm leading-6 text-slate-300">
-                            <span className="font-semibold text-white">
+                          <p className="text-sm leading-6 text-[var(--app-text)]">
+                            <span className="font-semibold text-[var(--app-text)]">
                               {actorName}
                             </span>{" "}
                             <span>{message}</span>
                             {projectName ? (
                               <>
-                                <span className="text-slate-500"> in </span>
-                                <span className="font-medium text-slate-400">
+                                <span className="text-[var(--app-muted)]">
+                                  {" "}
+                                  in{" "}
+                                </span>
+                                <span className="font-medium text-[var(--app-muted)]">
                                   {projectName}
                                 </span>
                               </>
@@ -437,13 +444,13 @@ export default function WorkspaceActivityPage() {
 
                           {taskTitle ? (
                             <p className="mt-1 text-sm">
-                              <span className="font-medium text-slate-300 transition-colors group-hover:text-white">
+                              <span className="font-medium text-[var(--app-muted)] transition-colors group-hover:text-[var(--app-text)]">
                                 {taskTitle}
                               </span>
                             </p>
                           ) : null}
 
-                          <p className="mt-1.5 text-xs text-slate-500">
+                          <p className="mt-1.5 text-xs text-[var(--app-muted)]">
                             {formatRelativeTime(activity.createdAt)}
                           </p>
                         </div>
@@ -474,7 +481,7 @@ export default function WorkspaceActivityPage() {
               <button
                 type="button"
                 onClick={() => setVisibleCount((prev) => prev + 12)}
-                className="rounded-2xl border border-slate-700 bg-slate-900/70 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800"
+                className="rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] px-5 py-3 text-sm font-medium text-[var(--app-text)] transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900/70 dark:hover:bg-slate-800"
               >
                 Load more
               </button>

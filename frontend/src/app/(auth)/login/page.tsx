@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthShell } from "@/components/auth/auth-shell";
+import { parseApiResponse } from "@/lib/response";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -33,16 +34,16 @@ export default function LoginPage() {
         credentials: "include",
       });
 
-      const data = await res.json();
+      const data = await parseApiResponse(res);
       console.log("Login response:", data);
 
       if (res.ok) {
-        localStorage.setItem("accessToken", data.data.accessToken);
+        localStorage.setItem("accessToken", data?.data?.accessToken || "");
         toast.success("Login successful");
         const nextUrl = searchParams.get("next") || "/dashboard";
         window.location.href = nextUrl;
       } else {
-        toast.error(data.message || "Login failed");
+        toast.error(data?.message || "Login failed");
       }
     } catch (err) {
       console.error("Login error:", err);
@@ -96,7 +97,10 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full rounded-2xl bg-gradient-to-r from-cyan-400 to-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+          className="w-full rounded-2xl px-4 py-3 text-sm font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+          style={{
+            backgroundImage: "linear-gradient(90deg, #22d3ee 0%, #6366f1 100%)",
+          }}
         >
           {isLoading ? "Logging in..." : "Log In"}
         </button>
@@ -106,7 +110,13 @@ export default function LoginPage() {
             <div className="w-full border-t border-slate-800" />
           </div>
           <div className="relative flex justify-center">
-            <span className="bg-zinc-950 px-3 text-xs uppercase tracking-[0.2em] text-slate-500">
+            <span
+              className="px-3 text-xs uppercase tracking-[0.2em] text-slate-500"
+              style={{
+                backgroundColor:
+                  "color-mix(in srgb, var(--app-surface) 88%, rgb(56 189 248) 12%)",
+              }}
+            >
               or
             </span>
           </div>
@@ -115,7 +125,13 @@ export default function LoginPage() {
         <button
           type="button"
           disabled={isLoading}
-          className="w-full rounded-2xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-70"
+          className="w-full rounded-2xl border px-4 py-3 text-sm font-medium text-[var(--app-text)] transition disabled:cursor-not-allowed disabled:opacity-70"
+          style={{
+            borderColor:
+              "color-mix(in srgb, var(--app-muted) 28%, transparent)",
+            backgroundColor:
+              "color-mix(in srgb, var(--app-surface) 90%, rgb(56 189 248) 10%)",
+          }}
         >
           Continue with Google
         </button>

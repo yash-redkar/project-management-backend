@@ -146,6 +146,24 @@ export default function WorkspaceChatPage() {
     if (conversation?._id) {
       clearChatUnread(conversation._id);
     }
+
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("teamforge-active-conversation-changed", {
+          detail: { conversationId: conversation?._id || null },
+        }),
+      );
+    }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("teamforge-active-conversation-changed", {
+            detail: { conversationId: null },
+          }),
+        );
+      }
+    };
   }, [conversation?._id]);
 
   useEffect(() => {
@@ -211,7 +229,18 @@ export default function WorkspaceChatPage() {
     };
 
     const handleError = (payload: any) => {
-      console.error("Socket error:", payload);
+      const message =
+        typeof payload === "string"
+          ? payload
+          : typeof payload?.message === "string"
+            ? payload.message
+            : "";
+
+      if (!message.trim()) {
+        return;
+      }
+
+      console.error("Socket error:", message);
     };
 
     if (socket.connected) {
@@ -312,21 +341,21 @@ export default function WorkspaceChatPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-4 text-white">
+      <div className="space-y-4 text-[var(--app-text)]">
         <h1 className="text-3xl font-semibold">Workspace Chat</h1>
-        <p className="text-slate-400">Loading workspace chat...</p>
+        <p className="text-[var(--app-muted)]">Loading workspace chat...</p>
       </div>
     );
   }
 
   if (error || !workspaceItem) {
     return (
-      <div className="space-y-4 text-white">
+      <div className="space-y-4 text-[var(--app-text)]">
         <h1 className="text-3xl font-semibold">Workspace Chat</h1>
         <p className="text-red-400">{error || "Workspace not found"}</p>
         <Link
           href="/workspaces"
-          className="inline-flex rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-200 transition hover:bg-slate-800"
+          className="inline-flex rounded-xl border border-slate-200 px-4 py-2 text-sm text-[var(--app-text)] transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
         >
           Back to Workspaces
         </Link>
@@ -338,55 +367,55 @@ export default function WorkspaceChatPage() {
   const role = workspaceItem.role || "member";
 
   return (
-    <div className="space-y-6 text-white">
+    <div className="space-y-6 text-[var(--app-text)]">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-3xl font-semibold">Workspace Chat</h1>
-          <p className="mt-2 text-slate-400">
+          <p className="mt-2 text-[var(--app-muted)]">
             General discussion for{" "}
-            <span className="text-white">{workspace.name}</span>.
+            <span className="text-[var(--app-text)]">{workspace.name}</span>.
           </p>
         </div>
 
         <Link
           href={`/workspaces/${workspaceId}`}
-          className="inline-flex rounded-xl border border-slate-700 px-4 py-2 text-sm text-slate-200 transition hover:bg-slate-800"
+          className="inline-flex rounded-xl border border-slate-200 px-4 py-2 text-sm text-[var(--app-text)] transition hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
         >
           Back
         </Link>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-4">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-          <p className="text-sm text-slate-400">Workspace</p>
+        <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 shadow-sm dark:border-slate-800">
+          <p className="text-sm text-[var(--app-muted)]">Workspace</p>
           <p className="mt-3 text-xl font-semibold">{workspace.name}</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-          <p className="text-sm text-slate-400">Plan</p>
+        <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 shadow-sm dark:border-slate-800">
+          <p className="text-sm text-[var(--app-muted)]">Plan</p>
           <p className="mt-3 text-xl font-semibold capitalize">
             {workspace.plan || "free"}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-          <p className="text-sm text-slate-400">Your Role</p>
+        <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 shadow-sm dark:border-slate-800">
+          <p className="text-sm text-[var(--app-muted)]">Your Role</p>
           <p className="mt-3 text-xl font-semibold capitalize">{role}</p>
         </div>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
-          <p className="text-sm text-slate-400">Channel</p>
+        <div className="rounded-2xl border border-slate-200 bg-[var(--app-surface)] p-5 shadow-sm dark:border-slate-800">
+          <p className="text-sm text-[var(--app-muted)]">Channel</p>
           <p className="mt-3 text-xl font-semibold">General</p>
         </div>
       </div>
 
-      <div className="rounded-3xl border border-slate-800 bg-slate-900/70 p-6">
-        <div className="mb-6 flex flex-col gap-4 border-b border-slate-800 pb-5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="rounded-3xl border border-slate-200 bg-[var(--app-surface)] p-6 shadow-sm dark:border-slate-800">
+        <div className="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-5 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800">
           <div>
-            <h2 className="text-2xl font-semibold text-white">
+            <h2 className="text-2xl font-semibold text-[var(--app-text)]">
               Workspace General
             </h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-[var(--app-muted)]">
               Share updates, plans, and team discussion here.
             </p>
           </div>
@@ -396,7 +425,7 @@ export default function WorkspaceChatPage() {
           </div>
         </div>
 
-        <div className="flex h-[65vh] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-zinc-950/60">
+        <div className="flex h-[65vh] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] dark:border-slate-800 dark:bg-zinc-950/60">
           <div className="flex-1 overflow-y-auto p-4 sm:p-5">
             {groupedMessages.length === 0 ? (
               <div className="flex h-full items-center justify-center">
@@ -404,10 +433,10 @@ export default function WorkspaceChatPage() {
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300">
                     💬
                   </div>
-                  <h3 className="mt-4 text-lg font-semibold text-white">
+                  <h3 className="mt-4 text-lg font-semibold text-[var(--app-text)]">
                     No messages yet
                   </h3>
-                  <p className="mt-2 text-sm text-slate-400">
+                  <p className="mt-2 text-sm text-[var(--app-muted)]">
                     Start the workspace conversation with your first message.
                   </p>
                 </div>
@@ -417,11 +446,11 @@ export default function WorkspaceChatPage() {
                 {groupedMessages.map((group, groupIndex) => (
                   <div key={`${group.date}-${groupIndex}`}>
                     <div className="mb-4 flex items-center gap-3">
-                      <div className="h-px flex-1 bg-slate-800" />
-                      <span className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-[11px] text-slate-400">
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
+                      <span className="rounded-full border border-slate-200 bg-[var(--app-surface)] px-3 py-1 text-[11px] text-[var(--app-muted)] dark:border-slate-800">
                         {group.date}
                       </span>
-                      <div className="h-px flex-1 bg-slate-800" />
+                      <div className="h-px flex-1 bg-slate-200 dark:bg-slate-800" />
                     </div>
 
                     <div className="space-y-3">
@@ -443,7 +472,7 @@ export default function WorkspaceChatPage() {
                               className={`max-w-[80%] rounded-2xl border px-4 py-3 sm:max-w-[70%] ${
                                 isOwnMessage
                                   ? "border-cyan-500/30 bg-cyan-500/10"
-                                  : "border-slate-800 bg-slate-900/80"
+                                  : "border-slate-200 bg-[var(--app-surface)] shadow-sm dark:border-slate-800 dark:bg-slate-900/80"
                               }`}
                             >
                               <div className="mb-1 flex items-center gap-2">
@@ -451,18 +480,18 @@ export default function WorkspaceChatPage() {
                                   className={`text-xs font-semibold ${
                                     isOwnMessage
                                       ? "text-cyan-300"
-                                      : "text-white"
+                                      : "text-[var(--app-text)]"
                                   }`}
                                 >
                                   {isOwnMessage ? "You" : getSenderName(sender)}
                                 </span>
 
-                                <span className="text-[11px] text-slate-500">
+                                <span className="text-[11px] text-[var(--app-muted)]">
                                   {formatMessageTime(message.createdAt)}
                                 </span>
                               </div>
 
-                              <p className="text-sm leading-6 text-slate-200">
+                              <p className="text-sm leading-6 text-[var(--app-text)]">
                                 {message.text}
                               </p>
                             </div>
@@ -478,7 +507,7 @@ export default function WorkspaceChatPage() {
             )}
           </div>
 
-          <div className="border-t border-slate-800 bg-slate-950/80 p-4">
+          <div className="border-t border-slate-200 bg-[var(--app-surface)] p-4 dark:border-slate-800 dark:bg-slate-950/80">
             {typingUsers.length > 0 ? (
               <p className="mb-2 text-xs text-cyan-300">{getTypingText()}</p>
             ) : null}
@@ -517,7 +546,7 @@ export default function WorkspaceChatPage() {
                 }}
                 rows={2}
                 placeholder="Write a message to the workspace..."
-                className="min-h-[56px] flex-1 resize-none rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-500"
+                className="min-h-[56px] flex-1 resize-none rounded-2xl border border-slate-200 bg-[var(--app-surface-2)] px-4 py-3 text-sm text-[var(--app-text)] outline-none transition placeholder:text-[var(--app-muted)] focus:border-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:placeholder:text-slate-500"
               />
 
               <button

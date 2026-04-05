@@ -86,7 +86,7 @@ export function UserMenu({ user }: { user: any }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-14 z-50 w-64 overflow-hidden rounded-2xl border border-slate-800 bg-zinc-950 shadow-2xl">
+        <div className="absolute right-0 top-14 z-50 w-64 overflow-hidden rounded-2xl border border-slate-800 bg-[var(--app-surface)] shadow-2xl">
           <div className="border-b border-slate-800 px-4 py-4">
             <p className="truncate text-sm font-semibold text-white">
               {displayName}
@@ -115,7 +115,7 @@ export function UserMenu({ user }: { user: any }) {
 
             <button
               type="button"
-              onClick={() => handleNavigate("/workspaces")}
+              onClick={() => handleNavigate("/settings?tab=team")}
               className={menuItemClass}
             >
               <Users className="size-4 text-slate-400" />
