@@ -113,6 +113,13 @@ export function GlobalChatListener() {
           }
         }
       } catch (error) {
+        const status = (error as any)?.response?.status;
+
+        if (status === 403) {
+          localStorage.removeItem("teamforge_active_workspace_id");
+          return;
+        }
+
         console.error("Failed to bootstrap chat listener:", error);
       }
     };

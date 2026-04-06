@@ -9,9 +9,86 @@ import {
 } from "../utils/mail.js";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { v2 as cloudinary } from "cloudinary";
+
+const GOOGLE_OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token";
+const GOOGLE_OAUTH_USERINFO_URL =
+    "https://openidconnect.googleapis.com/v1/userinfo";
+
+const getFrontendBaseUrl = () => {
+    return process.env.FRONTEND_URL || "http://localhost:3000";
+};
+
+const getFirstQueryValue = (value) => {
+    if (Array.isArray(value)) return value[0];
+    return value;
+};
+
+const getSafeNextPath = (nextPath) => {
+    if (typeof nextPath !== "string") return "/dashboard";
+
+    const trimmedPath = nextPath.trim();
+
+    if (!trimmedPath.startsWith("/") || trimmedPath.startsWith("//")) {
+        return "/dashboard";
+    }
+
+    return trimmedPath;
+};
+
+const buildGoogleState = (nextPath) => {
+    return Buffer.from(
+        JSON.stringify({ next: getSafeNextPath(nextPath) }),
+    ).toString("base64url");
+};
+
+const readGoogleState = (state) => {
+    if (!state) return { next: "/dashboard" };
+
+    try {
+        const parsedState = JSON.parse(
+            Buffer.from(state, "base64url").toString("utf8"),
+        );
+
+        return {
+            next: getSafeNextPath(parsedState?.next),
+        };
+    } catch {
+        return { next: "/dashboard" };
+    }
+};
+
+const generateUniqueUsername = async (baseUsername) => {
+    const normalizedBase =
+        baseUsername
+            .toLowerCase()
+            .replace(/[^a-z0-9_]/g, "")
+            .replace(/^_+|_+$/g, "")
+            .slice(0, 20) || "user";
+
+    let candidate = normalizedBase;
+    let suffix = 0;
+
+    while (await User.exists({ username: candidate })) {
+        suffix += 1;
+        candidate = `${normalizedBase}${suffix}`;
+    }
+
+    return candidate;
+};
 
 const hashToken = (token) =>
     crypto.createHash("sha256").update(token).digest("hex");
+
+const deleteCloudinaryAsset = async (publicId) => {
+    if (!publicId) return;
+
+    try {
+        await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
+    } catch (error) {
+        console.error("Failed to delete old avatar from Cloudinary:", error);
+    }
+};
 
 const generateAccessandRefreshToken = async (userId) => {
     const user = await User.findById(userId);
@@ -55,6 +132,7 @@ const registerUser = asyncHandler(async (req, res) => {
         email,
         password,
         username,
+        authProvider: "local",
         isEmailVerified: false,
     });
 
@@ -126,7 +204,6 @@ const login = asyncHandler(async (req, res) => {
         "-password -refreshTokenHash -refreshTokenExpiresAt -emailVerificationToken -emailVerificationExpiry",
     );
 
-    
     return res
         .status(200)
         .cookie("refreshToken", refreshToken, refreshCookieOptions)
@@ -137,6 +214,162 @@ const login = asyncHandler(async (req, res) => {
                 "User logged in Successfully",
             ),
         );
+});
+
+const googleLogin = asyncHandler(async (req, res) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const redirectUri =
+        process.env.GOOGLE_OAUTH_REDIRECT_URI ||
+        "http://localhost:8000/api/v1/auth/google/callback";
+    const nextPath = getSafeNextPath(req.query?.next);
+
+    if (!clientId) {
+        throw new ApiError(500, "Google login is not configured");
+    }
+
+    const authUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
+    authUrl.searchParams.set("client_id", clientId);
+    authUrl.searchParams.set("redirect_uri", redirectUri);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("scope", "openid email profile");
+    authUrl.searchParams.set("access_type", "offline");
+    authUrl.searchParams.set("prompt", "select_account");
+    authUrl.searchParams.set("state", buildGoogleState(nextPath));
+
+    return res.redirect(authUrl.toString());
+});
+
+const googleLoginCallback = asyncHandler(async (req, res) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    const redirectUri =
+        process.env.GOOGLE_OAUTH_REDIRECT_URI ||
+        "http://localhost:8000/api/v1/auth/google/callback";
+
+    if (!clientId || !clientSecret) {
+        throw new ApiError(500, "Google login is not configured");
+    }
+
+    const code = getFirstQueryValue(req.query.code);
+    const state = getFirstQueryValue(req.query.state);
+    const error = getFirstQueryValue(req.query.error);
+    const { next } = readGoogleState(state);
+
+    if (error) {
+        const errorUrl = new URL(
+            "/login/google/callback",
+            getFrontendBaseUrl(),
+        );
+        errorUrl.searchParams.set("error", "google_oauth_denied");
+        errorUrl.searchParams.set("next", next);
+        return res.redirect(errorUrl.toString());
+    }
+
+    if (!code) {
+        throw new ApiError(400, "Google authorization code is missing");
+    }
+
+    const tokenResponse = await fetch(GOOGLE_OAUTH_TOKEN_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+            code,
+            client_id: clientId,
+            client_secret: clientSecret,
+            redirect_uri: redirectUri,
+            grant_type: "authorization_code",
+        }),
+    });
+
+    if (!tokenResponse.ok) {
+        const tokenError = await tokenResponse.text();
+        throw new ApiError(401, tokenError || "Failed to exchange Google code");
+    }
+
+    const tokenData = await tokenResponse.json();
+
+    const profileResponse = await fetch(GOOGLE_OAUTH_USERINFO_URL, {
+        headers: {
+            Authorization: `Bearer ${tokenData.access_token}`,
+        },
+    });
+
+    if (!profileResponse.ok) {
+        const profileError = await profileResponse.text();
+        throw new ApiError(
+            401,
+            profileError || "Failed to fetch Google profile",
+        );
+    }
+
+    const profile = await profileResponse.json();
+
+    if (!profile?.email) {
+        throw new ApiError(400, "Google account email is missing");
+    }
+
+    const googleId = profile?.sub ? String(profile.sub) : "";
+
+    let user = googleId ? await User.findOne({ googleId }) : null;
+
+    if (!user) {
+        user = await User.findOne({ email: profile.email });
+    }
+
+    if (!user) {
+        const emailPrefix = profile.email.split("@")[0] || "user";
+        const username = await generateUniqueUsername(emailPrefix);
+
+        user = await User.create({
+            email: profile.email,
+            username,
+            fullName: profile.name || emailPrefix,
+            password: crypto.randomUUID(),
+            authProvider: "google",
+            googleId: googleId || undefined,
+            isEmailVerified: true,
+            avatar: {
+                url: profile.picture || "https://placehold.co/200x200",
+                localPath: "",
+            },
+        });
+    } else {
+        user.authProvider = "google";
+
+        if (googleId && !user.googleId) {
+            user.googleId = googleId;
+        }
+
+        user.fullName = profile.name || user.fullName || user.username;
+        user.isEmailVerified = true;
+
+        if (profile.picture) {
+            user.avatar = {
+                ...(user.avatar || {}),
+                url: profile.picture,
+            };
+        }
+
+        await user.save({ validateBeforeSave: false });
+    }
+
+    const { accessToken, refreshToken } = await generateAccessandRefreshToken(
+        user._id,
+    );
+
+    const frontendCallbackUrl = new URL(
+        "/login/google/callback",
+        getFrontendBaseUrl(),
+    );
+    frontendCallbackUrl.searchParams.set("accessToken", accessToken);
+    frontendCallbackUrl.searchParams.set("next", next);
+
+    return res
+        .status(200)
+        .cookie("refreshToken", refreshToken, refreshCookieOptions)
+        .redirect(frontendCallbackUrl.toString());
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
@@ -348,14 +581,27 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
     const { oldPassword, newPassword } = req.body;
 
     const user = await User.findById(req.user?._id);
+    const canSkipOldPasswordCheck =
+        user?.authProvider === "google" || Boolean(user?.googleId);
 
-    const isPasswordValid = await user.isPasswordCorrect(oldPassword);
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
 
-    if (!isPasswordValid) {
-        throw new ApiError(400, "Invalid old Password");
+    if (!canSkipOldPasswordCheck) {
+        const isPasswordValid = await user.isPasswordCorrect(oldPassword);
+
+        if (!isPasswordValid) {
+            throw new ApiError(400, "Invalid old password");
+        }
     }
 
     user.password = newPassword;
+
+    if (canSkipOldPasswordCheck) {
+        user.authProvider = "local";
+    }
+
     await user.save({ validateBeforeSave: false });
 
     return res
@@ -392,9 +638,64 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
         );
 });
 
+const uploadAvatar = asyncHandler(async (req, res) => {
+    const uploadedAvatar = req.uploadedFiles?.[0];
+
+    if (!uploadedAvatar) {
+        throw new ApiError(400, "Avatar image file is required");
+    }
+
+    if (!uploadedAvatar.mimetype?.startsWith("image/")) {
+        throw new ApiError(400, "Only image files are allowed for avatar");
+    }
+
+    const existingUser = await User.findById(req.user?._id).select("avatar");
+
+    if (!existingUser) {
+        throw new ApiError(404, "User not found");
+    }
+
+    const previousAvatarPublicId = existingUser.avatar?.localPath || "";
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set: {
+                avatar: {
+                    url: uploadedAvatar.url,
+                    localPath: uploadedAvatar.public_id,
+                },
+            },
+        },
+        {
+            new: true,
+            runValidators: true,
+        },
+    ).select(
+        "-password -refreshTokenHash -refreshTokenExpiresAt -emailVerificationToken -emailVerificationExpiry -forgotPasswordToken -forgotPasswordExpiry",
+    );
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    if (
+        previousAvatarPublicId &&
+        previousAvatarPublicId !== uploadedAvatar.public_id
+    ) {
+        await deleteCloudinaryAsset(previousAvatarPublicId);
+    }
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, user, "Avatar updated successfully"));
+});
+
 export {
     registerUser,
     login,
+    googleLogin,
+    googleLoginCallback,
     logoutUser,
     getCurrentUser,
     verifyEmail,
@@ -404,4 +705,5 @@ export {
     resetForgotPassword,
     changeCurrentPassword,
     updateAccountDetails,
+    uploadAvatar,
 };

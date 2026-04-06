@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import {
   User,
@@ -31,6 +31,7 @@ import { projectService } from "@/services/project.service";
 import { InviteWorkspaceMemberModal } from "@/components/workspace/invite-workspace-member-modal";
 import { ThemeToggleSwitch } from "@/components/ui/theme-toggle-switch";
 import { applyThemePreference } from "@/lib/theme";
+import { useClientSearchParams } from "@/lib/use-client-search-params";
 
 type SettingsSection =
   | "profile"
@@ -44,6 +45,8 @@ type CurrentUser = {
   _id: string;
   username: string;
   email: string;
+  authProvider?: "local" | "google";
+  googleId?: string;
   fullName?: string;
   fullname?: string;
   avatar?: {
@@ -244,26 +247,11 @@ function getUserEmail(item: any) {
 }
 
 export default function SettingsPage() {
-  const searchParams = useSearchParams();
+  const searchParams = useClientSearchParams();
   const router = useRouter();
 
-  const getInitialSection = (): SettingsSection => {
-    const tab = searchParams.get("tab");
-    if (
-      tab === "profile" ||
-      tab === "notifications" ||
-      tab === "appearance" ||
-      tab === "security" ||
-      tab === "team" ||
-      tab === "billing"
-    ) {
-      return tab;
-    }
-    return "profile";
-  };
-
   const [activeSection, setActiveSection] =
-    useState<SettingsSection>(getInitialSection);
+    useState<SettingsSection>("profile");
 
   const [user, setUser] = useState<CurrentUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -300,6 +288,7 @@ export default function SettingsPage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSendingVerification, setIsSendingVerification] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const [workspaceItem, setWorkspaceItem] = useState<WorkspaceListItem | null>(
     null,
@@ -314,6 +303,25 @@ export default function SettingsPage() {
   const [isUpdatingPlan, setIsUpdatingPlan] = useState(false);
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
   const [isConfirmingCheckout, setIsConfirmingCheckout] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
+
+  const canSkipOldPasswordCheck =
+    user?.authProvider === "google" || Boolean(user?.googleId);
+
+  useEffect(() => {
+    const tab = searchParams?.get("tab");
+
+    if (
+      tab === "profile" ||
+      tab === "notifications" ||
+      tab === "appearance" ||
+      tab === "security" ||
+      tab === "team" ||
+      tab === "billing"
+    ) {
+      setActiveSection(tab);
+    }
+  }, [searchParams]);
 
   const loadCurrentUser = async () => {
     try {
@@ -424,6 +432,12 @@ export default function SettingsPage() {
 
       setBillingSummary(res?.data || null);
     } catch (error: any) {
+      if (error?.response?.status === 403) {
+        localStorage.removeItem("teamforge_active_workspace_id");
+        setBillingSummary(null);
+        return;
+      }
+
       console.error(error);
       toast.error(
         error?.response?.data?.message || "Failed to load billing summary",
@@ -492,7 +506,7 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    const verified = searchParams.get("verified");
+    const verified = searchParams?.get("verified");
 
     if (verified === "true") {
       toast.success("Email verified successfully");
@@ -506,7 +520,7 @@ export default function SettingsPage() {
   }, [searchParams, router]);
 
   useEffect(() => {
-    const tab = searchParams.get("tab");
+    const tab = searchParams?.get("tab");
     if (
       tab === "profile" ||
       tab === "notifications" ||
@@ -761,8 +775,20 @@ export default function SettingsPage() {
   };
 
   const handleChangePassword = async () => {
-    if (!passwordForm.oldPassword || !passwordForm.newPassword) {
+    if (!passwordForm.newPassword) {
       toast.error("Please fill all required password fields");
+      return;
+    }
+
+    if (!canSkipOldPasswordCheck && !passwordForm.oldPassword) {
+      toast.error("Please enter your current password");
+      return;
+    }
+
+    const strongPasswordPattern =
+      /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*?&]{6,}$/;
+    if (!strongPasswordPattern.test(passwordForm.newPassword)) {
+      toast.error("Password must contain letters and numbers");
       return;
     }
 
@@ -780,8 +806,10 @@ export default function SettingsPage() {
       setIsChangingPassword(true);
 
       await authService.changePassword({
-        oldPassword: passwordForm.oldPassword,
         newPassword: passwordForm.newPassword,
+        ...(passwordForm.oldPassword
+          ? { oldPassword: passwordForm.oldPassword }
+          : {}),
       });
 
       toast.success("Password changed successfully");
@@ -813,6 +841,46 @@ export default function SettingsPage() {
       );
     } finally {
       setIsSendingVerification(false);
+    }
+  };
+
+  const handleAvatarSelected = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      event.target.value = "";
+      return;
+    }
+
+    const maxSizeBytes = 2 * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      toast.error("Avatar must be 2MB or smaller");
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      setIsUploadingAvatar(true);
+
+      const res = await authService.uploadAvatar(file);
+      const updatedUser = res?.data;
+
+      if (updatedUser) {
+        setUser(updatedUser);
+      }
+
+      toast.success(res?.message || "Avatar updated successfully");
+    } catch (error: any) {
+      console.error(error);
+      toast.error(error?.response?.data?.message || "Failed to upload avatar");
+    } finally {
+      setIsUploadingAvatar(false);
+      event.target.value = "";
     }
   };
 
@@ -1582,6 +1650,14 @@ export default function SettingsPage() {
 
               <div className="mb-8 flex flex-col gap-5 rounded-[26px] border border-slate-800 bg-slate-950/35 p-5 sm:flex-row sm:items-center">
                 <div className="relative shrink-0">
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/gif"
+                    onChange={handleAvatarSelected}
+                    className="hidden"
+                  />
+
                   {showRealAvatar ? (
                     <img
                       src={user?.avatar?.url}
@@ -1596,7 +1672,8 @@ export default function SettingsPage() {
 
                   <button
                     type="button"
-                    onClick={() => toast("Avatar upload API is not built yet")}
+                    disabled={isUploadingAvatar}
+                    onClick={() => avatarInputRef.current?.click()}
                     className="absolute -bottom-1 -right-1 flex h-10 w-10 items-center justify-center rounded-full border border-slate-800 bg-slate-900 text-slate-200 transition hover:bg-slate-800"
                   >
                     <Camera className="h-4 w-4" />
@@ -2080,21 +2157,40 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="mb-2 block text-sm font-medium text-slate-300">
-                    Current Password
-                  </label>
-                  <input
-                    type="password"
-                    value={passwordForm.oldPassword}
-                    onChange={(e) =>
-                      setPasswordForm((prev) => ({
-                        ...prev,
-                        oldPassword: e.target.value,
-                      }))
-                    }
-                    className={inputClass()}
-                    placeholder="Enter current password"
-                  />
+                  {canSkipOldPasswordCheck ? (
+                    <div
+                      className="rounded-2xl border p-3"
+                      style={{
+                        borderColor:
+                          "color-mix(in srgb, var(--app-muted) 32%, rgb(14 165 233) 68%)",
+                        backgroundColor:
+                          "color-mix(in srgb, var(--app-surface) 88%, rgb(56 189 248) 12%)",
+                      }}
+                    >
+                      <p className="text-sm text-[var(--app-text)]">
+                        You signed in with Google. Set a new password here to
+                        enable email/password login too.
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <label className="mb-2 block text-sm font-medium text-slate-300">
+                        Current Password
+                      </label>
+                      <input
+                        type="password"
+                        value={passwordForm.oldPassword}
+                        onChange={(e) =>
+                          setPasswordForm((prev) => ({
+                            ...prev,
+                            oldPassword: e.target.value,
+                          }))
+                        }
+                        className={inputClass()}
+                        placeholder="Enter current password"
+                      />
+                    </>
+                  )}
                 </div>
 
                 <div>

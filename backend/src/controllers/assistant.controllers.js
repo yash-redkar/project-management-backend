@@ -63,17 +63,60 @@ export const queryWorkspaceAssistant = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Query is required");
     }
 
-    if (!workspaceId || !mongoose.isValidObjectId(workspaceId)) {
-        throw new ApiError(400, "workspaceId is required");
+    const trimmedQuery = String(query).trim();
+
+    if (isOnboardingQuery(trimmedQuery) && !workspaceId) {
+        return res.status(200).json(
+            new ApiResponse(
+                200,
+                {
+                    answer: buildOnboardingAnswer(),
+                    suggestions: [
+                        "Create your first workspace to start collaborating.",
+                        "Invite teammates after workspace setup.",
+                        "Create one sample project and a few tasks to begin.",
+                    ],
+                    tasks: [],
+                    projects: [],
+                    members: [],
+                    activity: [],
+                    plan: "free",
+                },
+                "Assistant onboarding response generated successfully",
+            ),
+        );
     }
 
-    const workspace = await Workspace.findById(workspaceId).lean();
+    let resolvedWorkspaceId = workspaceId;
+
+    if (!resolvedWorkspaceId) {
+        const fallbackMembership = await WorkspaceMember.findOne({
+            user: req.user._id,
+            status: "active",
+        })
+            .sort({ createdAt: 1 })
+            .select("workspace")
+            .lean();
+
+        resolvedWorkspaceId = fallbackMembership?.workspace
+            ? String(fallbackMembership.workspace)
+            : "";
+    }
+
+    if (
+        !resolvedWorkspaceId ||
+        !mongoose.isValidObjectId(resolvedWorkspaceId)
+    ) {
+        throw new ApiError(400, "Select a workspace first");
+    }
+
+    const workspace = await Workspace.findById(resolvedWorkspaceId).lean();
     if (!workspace) {
         throw new ApiError(404, "Workspace not found");
     }
 
     const membership = await WorkspaceMember.findOne({
-        workspace: workspaceId,
+        workspace: resolvedWorkspaceId,
         user: req.user._id,
         status: "active",
     }).lean();
@@ -83,13 +126,13 @@ export const queryWorkspaceAssistant = asyncHandler(async (req, res) => {
     }
 
     const projectMemberRows = await ProjectMember.find({
-        workspace: workspaceId,
+        workspace: resolvedWorkspaceId,
         user: req.user._id,
         status: "active",
     }).select("project");
 
     const accessibleProjectIds = projectMemberRows.map((row) => row.project);
-    const q = String(query).trim();
+    const q = trimmedQuery;
     const searchRegex = new RegExp(
         q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
         "i",
@@ -98,7 +141,7 @@ export const queryWorkspaceAssistant = asyncHandler(async (req, res) => {
     const [tasks, projects, memberRows, activities, workspacePlan] =
         await Promise.all([
             Tasks.find({
-                workspace: workspaceId,
+                workspace: resolvedWorkspaceId,
                 project: { $in: accessibleProjectIds },
                 $or: [{ title: searchRegex }, { description: searchRegex }],
             })
@@ -107,7 +150,7 @@ export const queryWorkspaceAssistant = asyncHandler(async (req, res) => {
                 .populate("assignedTo", "username email avatar fullName name")
                 .lean(),
             Project.find({
-                workspace: workspaceId,
+                workspace: resolvedWorkspaceId,
                 _id: { $in: accessibleProjectIds },
                 $or: [{ name: searchRegex }, { description: searchRegex }],
             })
@@ -115,14 +158,14 @@ export const queryWorkspaceAssistant = asyncHandler(async (req, res) => {
                 .limit(6)
                 .lean(),
             WorkspaceMember.find({
-                workspace: workspaceId,
+                workspace: resolvedWorkspaceId,
                 status: "active",
             })
                 .select("user role status createdAt")
                 .populate("user", "username email fullName avatar")
                 .limit(6)
                 .lean(),
-            ActivityLog.find({ workspace: workspaceId })
+            ActivityLog.find({ workspace: resolvedWorkspaceId })
                 .sort({ createdAt: -1 })
                 .limit(6)
                 .populate("actor", "username email fullName avatar")

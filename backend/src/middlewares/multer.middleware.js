@@ -63,13 +63,19 @@ const uploadBufferToCloudinary = (buffer, options = {}) =>
 
 export const uploadToCloudinary = async (req, res, next) => {
     try {
-        if (!req.files || req.files.length === 0) {
+        const incomingFiles = Array.isArray(req.files)
+            ? req.files
+            : req.file
+              ? [req.file]
+              : [];
+
+        if (incomingFiles.length === 0) {
             return next();
         }
 
         const folder = process.env.CLOUDINARY_FOLDER || "task-attachments";
 
-        const uploadPromises = req.files.map((file) =>
+        const uploadPromises = incomingFiles.map((file) =>
             uploadBufferToCloudinary(file.buffer, { folder }),
         );
 
@@ -79,11 +85,10 @@ export const uploadToCloudinary = async (req, res, next) => {
             public_id: result.public_id,
             url: result.secure_url,
             resource_type: result.resource_type,
-            mimetype: req.files[index].mimetype,
+            mimetype: incomingFiles[index].mimetype,
             size: result.bytes,
-            originalname: req.files[index].originalname,
+            originalname: incomingFiles[index].originalname,
         }));
-
 
         return next();
     } catch (error) {

@@ -11,7 +11,7 @@ export const authService = {
     return res.data;
   },
 
-  async changePassword(payload: { oldPassword: string; newPassword: string }) {
+  async changePassword(payload: { oldPassword?: string; newPassword: string }) {
     const res = await apiClient.post("/auth/change-password", payload);
     return res.data;
   },
@@ -23,6 +23,15 @@ export const authService = {
 
   async resendEmailVerification() {
     const res = await apiClient.post("/auth/resend-email-verification");
+    return res.data;
+  },
+
+  async uploadAvatar(file: File) {
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const res = await apiClient.post("/auth/avatar", formData);
+
     return res.data;
   },
 };

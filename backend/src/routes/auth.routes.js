@@ -3,12 +3,15 @@ import {
     changeCurrentPassword,
     forgotPasswordRequest,
     getCurrentUser,
+    googleLogin,
+    googleLoginCallback,
     login,
     logoutUser,
     refreshAccessToken,
     registerUser,
     resendEmailVerification,
     resetForgotPassword,
+    uploadAvatar,
     verifyEmail,
     updateAccountDetails,
 } from "../controllers/auth.controllers.js";
@@ -22,12 +25,18 @@ import {
     userUpdateAccountValidator,
 } from "../validators/index.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import {
+    upload,
+    uploadToCloudinary,
+} from "../middlewares/multer.middleware.js";
 
 const router = Router();
 
 //unsecured route
 router.route("/register").post(userRegisterValidator(), validate, registerUser);
 router.route("/login").post(userLoginValidator(), validate, login);
+router.route("/google").get(googleLogin);
+router.route("/google/callback").get(googleLoginCallback);
 router.route("/verify-email/:verificationToken").get(verifyEmail);
 router.route("/refresh-token").post(refreshAccessToken);
 router
@@ -59,5 +68,8 @@ router
 router
     .route("/resend-email-verification")
     .post(verifyJWT, resendEmailVerification);
+router
+    .route("/avatar")
+    .post(verifyJWT, upload.single("avatar"), uploadToCloudinary, uploadAvatar);
 
 export default router;

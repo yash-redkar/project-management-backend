@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { MessageSquare, Users } from "lucide-react";
@@ -11,10 +11,11 @@ import { chatService } from "@/services/chat.service";
 import { useAuth } from "@/context/auth-context";
 import { getSocket } from "@/lib/socket";
 import { clearChatUnread } from "@/lib/chat-unread";
+import { useClientSearchParams } from "@/lib/use-client-search-params";
 
 export default function ProjectChatPage() {
   const params = useParams();
-  const searchParams = useSearchParams();
+  const searchParams = useClientSearchParams();
   const { user: currentUser } = useAuth();
 
   const workspaceId =
@@ -45,8 +46,8 @@ export default function ProjectChatPage() {
   const [error, setError] = useState("");
   const [typingUsers, setTypingUsers] = useState<any[]>([]);
 
-  const queryMode = searchParams.get("mode") || "";
-  const queryConversationId = searchParams.get("conversationId") || "";
+  const queryMode = searchParams?.get("mode") || "";
+  const queryConversationId = searchParams?.get("conversationId") || "";
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);

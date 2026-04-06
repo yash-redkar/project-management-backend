@@ -1,5 +1,9 @@
 import { body } from "express-validator";
-import { AvailableProjectStatus, AvailableTaskStatus, AvailableUserRole } from "../utils/constants.js";
+import {
+    AvailableProjectStatus,
+    AvailableTaskStatus,
+    AvailableUserRole,
+} from "../utils/constants.js";
 
 const passwordValidator = (
     fieldName = "password",
@@ -81,10 +85,19 @@ const userUpdateAccountValidator = () => {
 
 const userChangedCurrentPasswordValidator = () => {
     return [
-        body("oldPassword")
-            .trim()
-            .notEmpty()
-            .withMessage("Old password is required"),
+        body().custom((value, { req }) => {
+            const canSkipOldPasswordCheck =
+                req.user?.authProvider === "google" ||
+                Boolean(req.user?.googleId);
+            const oldPassword = req.body?.oldPassword;
+
+            if (!canSkipOldPasswordCheck && !oldPassword) {
+                throw new Error("Old password is required");
+            }
+
+            return true;
+        }),
+        body("oldPassword").optional().trim(),
         passwordValidator("newPassword", "New password is required"),
     ];
 };

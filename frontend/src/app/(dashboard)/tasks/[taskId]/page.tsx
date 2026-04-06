@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useAuth } from "@/context/auth-context";
@@ -18,10 +18,11 @@ import { taskCommentService } from "@/services/task-comment.service";
 import { subTaskService } from "@/services/subtask.service";
 import { projectMemberService } from "@/services/project-member.service";
 import { taskAttachmentService } from "@/services/task-attachment.service";
+import { useClientSearchParams } from "@/lib/use-client-search-params";
 
 export default function TaskDetailsPage() {
   const params = useParams();
-  const searchParams = useSearchParams();
+  const searchParams = useClientSearchParams();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const taskId =
@@ -31,8 +32,8 @@ export default function TaskDetailsPage() {
         ? params.taskId[0]
         : "";
 
-  const workspaceId = searchParams.get("workspaceId") || "";
-  const projectId = searchParams.get("projectId") || "";
+  const workspaceId = searchParams?.get("workspaceId") || "";
+  const projectId = searchParams?.get("projectId") || "";
 
   const { user: currentUser } = useAuth();
 

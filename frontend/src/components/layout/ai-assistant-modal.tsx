@@ -15,6 +15,18 @@ type AssistantResult = {
   plan?: string;
 };
 
+function isGeneralAssistantQuery(query: string) {
+  const normalized = query.toLowerCase();
+
+  return (
+    normalized.includes("how to use") ||
+    normalized.includes("how this website works") ||
+    normalized.includes("step by step") ||
+    normalized.includes("new user") ||
+    normalized.includes("website guide")
+  );
+}
+
 export function AiAssistantModal({
   isOpen,
   onClose,
@@ -52,6 +64,15 @@ export function AiAssistantModal({
 
     if (typeof queryOverride === "string") {
       setQuery(trimmed);
+    }
+
+    const canRunWithoutWorkspace = isGeneralAssistantQuery(trimmed);
+
+    if (!activeWorkspaceId && !canRunWithoutWorkspace) {
+      toast.error(
+        "Please open or select a workspace first for workspace-specific questions",
+      );
+      return;
     }
 
     try {

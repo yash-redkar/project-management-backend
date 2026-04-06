@@ -3,16 +3,19 @@
 import Link from "next/link";
 import toast from "react-hot-toast";
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { AuthInput } from "@/components/auth/auth-input";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { parseApiResponse } from "@/lib/response";
+import { useClientSearchParams } from "@/lib/use-client-search-params";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const searchParams = useSearchParams();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const searchParams = useClientSearchParams();
+
+  const nextUrl = searchParams?.get("next") || "/dashboard";
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -40,7 +43,7 @@ export default function LoginPage() {
       if (res.ok) {
         localStorage.setItem("accessToken", data?.data?.accessToken || "");
         toast.success("Login successful");
-        const nextUrl = searchParams.get("next") || "/dashboard";
+        const nextUrl = searchParams?.get("next") || "/dashboard";
         window.location.href = nextUrl;
       } else {
         toast.error(data?.message || "Login failed");
@@ -51,6 +54,17 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    if (isLoading || isGoogleLoading) return;
+
+    setIsGoogleLoading(true);
+
+    const googleLoginUrl = new URL("http://localhost:8000/api/v1/auth/google");
+    googleLoginUrl.searchParams.set("next", nextUrl);
+
+    window.location.href = googleLoginUrl.toString();
   };
 
   return (
@@ -124,7 +138,8 @@ export default function LoginPage() {
 
         <button
           type="button"
-          disabled={isLoading}
+          onClick={handleGoogleLogin}
+          disabled={isLoading || isGoogleLoading}
           className="w-full rounded-2xl border px-4 py-3 text-sm font-medium text-[var(--app-text)] transition disabled:cursor-not-allowed disabled:opacity-70"
           style={{
             borderColor:
@@ -133,7 +148,9 @@ export default function LoginPage() {
               "color-mix(in srgb, var(--app-surface) 90%, rgb(56 189 248) 10%)",
           }}
         >
-          Continue with Google
+          {isGoogleLoading
+            ? "Redirecting to Google..."
+            : "Continue with Google"}
         </button>
 
         <p className="text-center text-sm text-slate-400">
