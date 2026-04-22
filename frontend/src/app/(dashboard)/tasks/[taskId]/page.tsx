@@ -395,10 +395,9 @@ export default function TaskDetailsPage() {
                 _id: selectedUser?._id || selectedUser?.id || selectedAssignee,
                 username:
                   selectedUser?.username ||
-                  selectedUser?.fullname ||
                   selectedUser?.fullName ||
+                  selectedUser?.fullname ||
                   selectedUser?.name ||
-                  selectedUser?.email ||
                   "Unknown User",
                 fullname:
                   selectedUser?.fullname ||

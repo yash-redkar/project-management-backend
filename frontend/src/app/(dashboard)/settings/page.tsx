@@ -116,7 +116,7 @@ const settingsSections: {
 
 function getInitials(user?: CurrentUser | null) {
   const value =
-    user?.fullName || user?.fullname || user?.username || user?.email || "U";
+    user?.fullName || user?.fullname || user?.username || "U";
   const parts = String(value).trim().split(" ").filter(Boolean);
 
   if (parts.length >= 2) {

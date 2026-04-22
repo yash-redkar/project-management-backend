@@ -27,7 +27,6 @@ function getInitialsFromUser(notification: any) {
     notification?.actor?.fullname ||
     notification?.actor?.name ||
     notification?.actor?.username ||
-    notification?.actor?.email ||
     "";
 
   if (!name) return "NA";

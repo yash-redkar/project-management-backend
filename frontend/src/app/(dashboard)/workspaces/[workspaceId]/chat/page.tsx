@@ -58,10 +58,10 @@ export default function WorkspaceChatPage() {
 
   const getSenderName = (sender: any) => {
     return (
+      sender?.fullName ||
       sender?.fullname ||
       sender?.name ||
       sender?.username ||
-      sender?.email ||
       "Unknown User"
     );
   };
@@ -70,10 +70,10 @@ export default function WorkspaceChatPage() {
     const names = typingUsers
       .map(
         (user) =>
+          user?.fullName ||
           user?.fullname ||
           user?.name ||
           user?.username ||
-          user?.email ||
           "Someone",
       )
       .filter(Boolean);

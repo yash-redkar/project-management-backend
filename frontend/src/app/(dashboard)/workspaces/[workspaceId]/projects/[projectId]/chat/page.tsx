@@ -77,10 +77,10 @@ export default function ProjectChatPage() {
 
   const getSenderName = (sender: any) => {
     return (
+      sender?.fullName ||
       sender?.fullname ||
       sender?.name ||
       sender?.username ||
-      sender?.email ||
       "Unknown User"
     );
   };
@@ -89,10 +89,10 @@ export default function ProjectChatPage() {
     const names = typingUsers
       .map(
         (user) =>
+          user?.fullName ||
           user?.fullname ||
           user?.name ||
           user?.username ||
-          user?.email ||
           "Someone",
       )
       .filter(Boolean);
@@ -109,11 +109,10 @@ export default function ProjectChatPage() {
     return {
       _id: String(user?._id || ""),
       fullname:
-        user?.fullname ||
         user?.fullName ||
+        user?.fullname ||
         user?.name ||
         user?.username ||
-        user?.email ||
         "Unknown User",
       username: user?.username || "",
       email: user?.email || "No email",

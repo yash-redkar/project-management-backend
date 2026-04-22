@@ -651,6 +651,7 @@ export default function ProjectDetailsPage() {
                       {sortedMembers.map((item: any, index: number) => {
                         const user = item.user || item.member || item;
                         const displayName =
+                          user?.fullName ||
                           user?.fullname ||
                           user?.name ||
                           user?.username ||
@@ -824,6 +825,7 @@ export default function ProjectDetailsPage() {
                             "No email";
 
                           const inviteUserName =
+                            invite.user?.fullName ||
                             invite.user?.fullname ||
                             invite.user?.name ||
                             invite.user?.username ||
@@ -832,10 +834,10 @@ export default function ProjectDetailsPage() {
                           const inviteRole = invite.role || "member";
 
                           const invitedBy =
+                            invite.invitedBy?.fullName ||
                             invite.invitedBy?.fullname ||
                             invite.invitedBy?.name ||
                             invite.invitedBy?.username ||
-                            invite.invitedBy?.email ||
                             "Unknown";
 
                           const expiresAt = invite.inviteExpiresAt
@@ -1001,7 +1003,11 @@ export default function ProjectDetailsPage() {
                       >
                         <p className="text-sm leading-6 text-[var(--app-text)]">
                           <span className="font-semibold text-[var(--app-text)]">
-                            {activity.actor?.username || "Someone"}
+                            {activity.actor?.fullName ||
+                              activity.actor?.fullname ||
+                              activity.actor?.name ||
+                              activity.actor?.username ||
+                              "Someone"}
                           </span>{" "}
                           {String(activity.message || "").replace(/_/g, " ")}
                         </p>

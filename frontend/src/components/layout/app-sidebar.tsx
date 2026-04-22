@@ -26,8 +26,7 @@ function navClass(isActive: boolean) {
 }
 
 function getInitials(user: any) {
-  const name =
-    user?.fullname || user?.fullName || user?.username || user?.email || "U";
+  const name = user?.fullname || user?.fullName || user?.username || "U";
 
   const parts = String(name).trim().split(" ").filter(Boolean);
 
