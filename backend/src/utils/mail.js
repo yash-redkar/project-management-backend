@@ -5,31 +5,31 @@ const sendEmail = async(options) => {
     const mailGenerator = new Mailgen({
         theme: "default",
         product: {
-            name: "Task Manager",
-            link:"https://taskmanagerlink.com"
-        }
-    })
+            name: "TeamForge",
+            link: "https://getteamforge.vercel.app",
+        },
+    });
 
     const emailTextual = mailGenerator.generatePlaintext(options.mailgenContent)
     const emailHtml = mailGenerator.generate(options.mailgenContent)
 
     const transporter = nodemailer.createTransport({
-        host: process.env.MAILTRAP_SMTP_HOST,
-        port: Number(process.env.MAILTRAP_SMTP_PORT),
+        host: process.env.BREVO_SMTP_SERVER,
+        port: Number(process.env.BREVO_SMTP_PORT),
         secure: false,
         auth: {
-            user: process.env.MAILTRAP_SMTP_USER,
-            pass: process.env.MAILTRAP_SMTP_PASS,
+            user: process.env.BREVO_SMTP_USER,
+            pass: process.env.BREVO_SMTP_PASS,
         },
     });
 
     const mail = {
-        from: "mail.taskmanager@example.com",
-        to:options.email,
+        from: process.env.EMAIL_FROM,
+        to: options.email,
         subject: options.subject,
-        text:emailTextual,
-        html: emailHtml
-    }
+        text: emailTextual,
+        html: emailHtml,
+    };
 
     try {
         await transporter.sendMail(mail)
