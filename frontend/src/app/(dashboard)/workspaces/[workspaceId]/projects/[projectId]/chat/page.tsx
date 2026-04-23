@@ -664,9 +664,6 @@ export default function ProjectChatPage() {
                       <p className="truncate text-sm font-medium text-white">
                         {member.fullname}
                       </p>
-                      <p className="truncate text-xs text-slate-400">
-                        {member.email}
-                      </p>
                     </button>
                   ))
                 )}
